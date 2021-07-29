@@ -3,6 +3,7 @@ package com.dynatrace.prototype.domainModel.eventData;
 import java.util.LinkedHashMap;
 
 public class KeptnCloudEventTestData extends KeptnCloudEventDeploymentExtension {
+    private static final String TEST_START = "start", TEST_END = "end", TEST_GIT_COMMIT = "gitCommit";
     private LinkedHashMap<String, ?> test;
 
     public LinkedHashMap<String, ?> getTest() {
@@ -10,31 +11,14 @@ public class KeptnCloudEventTestData extends KeptnCloudEventDeploymentExtension 
     }
 
     public String getTestStart() {
-        return getValueOfLinkedHashMap(test, "start");
+        return getValueOfLinkedHashMap(test, TEST_START);
     }
 
     public String getTestEnd() {
-        return getValueOfLinkedHashMap(test, "end");
+        return getValueOfLinkedHashMap(test, TEST_END);
     }
 
     public String getTestGitCommit() {
-        return getValueOfLinkedHashMap(test, "gitCommit");
+        return getValueOfLinkedHashMap(test, TEST_GIT_COMMIT);
     }
-
-    /*
-    TODO: add test, deployment and evaluation classes probably for all events (evaluation 2 different types)
-    private Object deployment; //(TestTriggeredDeploymentDetails)
-            private String[] deploymentURIsLocal;
-            private String[] deploymentURIsPublic;
-
-    private Object test; //(TestTriggeredDetails)
-            private String/Enum teststrategy;
-
-    private Object test; //(TestFinishedDetails)
-            private String start;
-            private String end;
-            private String gitCommit;
-
-     */
 }
-
