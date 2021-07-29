@@ -20,17 +20,4 @@ public class KeptnCloudEventProjectFinishedData {
     public String getShipyard() {
         return shipyard;
     }
-
-    /*
-    //Project create
-    private String projectName;
-    private String gitRemoteURL;
-    private String shipyard;
-
-    private Object createdProject;
-            private String projectName;
-            private String gitRemoteURL;
-            private String shipyard;
-
-     */
 }

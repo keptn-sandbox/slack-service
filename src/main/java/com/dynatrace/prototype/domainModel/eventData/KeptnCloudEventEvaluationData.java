@@ -10,6 +10,10 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 
 public class KeptnCloudEventEvaluationData extends KeptnCloudEventData {
+    private static final String EVALUATION_RESULT = "result", EVALUATION_SCORE = "score", EVALUATION_GIT_COMMIT = "gitCommit", EVALUATION_START = "start", EVALUATION_TIME_START = "timeStart", EVALUATION_END = "end", EVALUATION_TIME_END = "timeEnd",
+            SLI_INDICATOR_RESULT = "indicatorResults", SLI_DISPLAY_NAME = "displayName", SLI_SCORE = "score", SLI_STATUS = "status", SLI_PASS_TARGETS = "passTargets", SLI_WARNING_TARGETS = "warningTargets", SLI_VALUE = "value",
+            SLI_VALUE_VALUE = "value", SLI_VALUE_METRIC = "metric", SLI_VALUE_SUCCESS = "success", SLI_VALUE_MESSAGE = "message",
+            SLI_TARGET_CRITERIA = "criteria", SLI_TARGET_VALUE = "targetValue", SLI_TARGET_VIOLATED = "violated";
     private LinkedHashMap<String, ?> test;
     private LinkedHashMap<String, ?> deployment;
     private LinkedHashMap<String, ?> evaluation;
@@ -27,53 +31,53 @@ public class KeptnCloudEventEvaluationData extends KeptnCloudEventData {
     }
 
     public String getEvaluationStart() {
-        return getValueOfLinkedHashMap(evaluation, "start", "timeStart");
+        return getValueOfLinkedHashMap(evaluation, EVALUATION_START, EVALUATION_TIME_START);
     }
 
     public String getEvaluationEnd() {
-        return getValueOfLinkedHashMap(evaluation, "end", "timeEnd");
+        return getValueOfLinkedHashMap(evaluation, EVALUATION_END, EVALUATION_TIME_END);
     }
 
     public String getEvaluationResult() {
-        return getValueOfLinkedHashMap(evaluation, "result");
+        return getValueOfLinkedHashMap(evaluation, EVALUATION_RESULT);
     }
 
     public String getEvaluationScore() {
-        return getValueOfLinkedHashMap(evaluation, "score");
+        return getValueOfLinkedHashMap(evaluation, EVALUATION_SCORE);
     }
 
     public String getGitCommit() {
-        return getValueOfLinkedHashMap(evaluation, "gitCommit");
+        return getValueOfLinkedHashMap(evaluation, EVALUATION_GIT_COMMIT);
     }
 
     public HashSet<SLIEvaluationResult> getSLIEvaluationResults() {
         HashSet<SLIEvaluationResult> sliEvaluationResults = null;
 
         if (evaluation != null) {
-            Object indicatorResultsObject = evaluation.get("indicatorResults");
+            Object indicatorResultsObject = evaluation.get(SLI_INDICATOR_RESULT);
 
             if (indicatorResultsObject instanceof ArrayList) {
-                ArrayList<LinkedHashMap> indicatorResultsArrayList = (ArrayList<LinkedHashMap>) indicatorResultsObject;
+                ArrayList<LinkedHashMap<String, ?>> indicatorResultsArrayList = (ArrayList<LinkedHashMap<String, ?>>) indicatorResultsObject;
                 sliEvaluationResults = new HashSet<>();
 
-                for (LinkedHashMap indicatorResult : indicatorResultsArrayList ) {
+                for (LinkedHashMap<String, ?> indicatorResult : indicatorResultsArrayList ) {
                     try {
-                        String name = indicatorResult.get("displayName").toString();
-                        float score = numberToFloatParser(indicatorResult.get("score"));
+                        String name = indicatorResult.get(SLI_DISPLAY_NAME).toString();
+                        float score = numberToFloatParser(indicatorResult.get(SLI_SCORE));
                         KeptnCloudEventSLIResult value;
-                        Object indicatorResultValueObject = indicatorResult.get("value");
+                        Object indicatorResultValueObject = indicatorResult.get(SLI_VALUE);
 
                         if (indicatorResultValueObject instanceof LinkedHashMap) {
-                            LinkedHashMap indicatorResultValue = (LinkedHashMap) indicatorResultValueObject;
+                            LinkedHashMap<String, ?> indicatorResultValue = (LinkedHashMap<String, ?>) indicatorResultValueObject;
 
-                            value = new KeptnCloudEventSLIResult(indicatorResultValue.get("metric").toString(), numberToFloatParser(indicatorResultValue.get("value")), (boolean) indicatorResultValue.get("success"), indicatorResultValue.get("message").toString());
+                            value = new KeptnCloudEventSLIResult(indicatorResultValue.get(SLI_VALUE_METRIC).toString(), numberToFloatParser(indicatorResultValue.get(SLI_VALUE_VALUE)), (boolean) indicatorResultValue.get(SLI_VALUE_SUCCESS), indicatorResultValue.get(SLI_VALUE_MESSAGE).toString());
                         } else {
                             throw new Exception("Could not get value of indicatorResultValue!");
                         }
 
-                        KeptnCloudEventDataResult status = KeptnCloudEventDataResult.parseResult(indicatorResult.get("status").toString());
-                        HashSet<KeptnCloudEventSLITarget> passTargets = getSLITargets(indicatorResult, "passTargets");
-                        HashSet<KeptnCloudEventSLITarget> warningTargets = getSLITargets(indicatorResult, "warningTargets");
+                        KeptnCloudEventDataResult status = KeptnCloudEventDataResult.parseResult(indicatorResult.get(SLI_STATUS).toString());
+                        HashSet<KeptnCloudEventSLITarget> passTargets = getSLITargets(indicatorResult, SLI_PASS_TARGETS);
+                        HashSet<KeptnCloudEventSLITarget> warningTargets = getSLITargets(indicatorResult, SLI_WARNING_TARGETS);
 
                         sliEvaluationResults.add(new SLIEvaluationResult(name, score, value, passTargets, warningTargets, status));
                     } catch (Exception e) {
@@ -89,22 +93,21 @@ public class KeptnCloudEventEvaluationData extends KeptnCloudEventData {
         return sliEvaluationResults;
     }
 
-    private HashSet<KeptnCloudEventSLITarget> getSLITargets(LinkedHashMap indicatorResult, String targetType) { //TODO: maybe enum "passTargets", "warningTargets"
-        final String CRITERIA = "criteria", TARGET_VALUE = "targetValue", VIOLATED = "violated";
+    private HashSet<KeptnCloudEventSLITarget> getSLITargets(LinkedHashMap<String, ?> indicatorResult, String targetType) {
         HashSet<KeptnCloudEventSLITarget> sliTargets = null;
 
         if (indicatorResult != null) {
             Object sliTargetsObject = indicatorResult.get(targetType);
 
             if (sliTargetsObject instanceof ArrayList) {
-                ArrayList<LinkedHashMap> sliTargetsArrayList = (ArrayList<LinkedHashMap>) sliTargetsObject;
+                ArrayList<LinkedHashMap<String, ?>> sliTargetsArrayList = (ArrayList<LinkedHashMap<String, ?>>) sliTargetsObject;
 
                 sliTargets = new HashSet<>();
                 for (LinkedHashMap<?,?> element : sliTargetsArrayList) {
                     try {
-                        String criteria = element.get(CRITERIA).toString();
-                        float targetValue = numberToFloatParser(element.get(TARGET_VALUE));
-                        boolean violated = (boolean) element.get(VIOLATED);
+                        String criteria = element.get(SLI_TARGET_CRITERIA).toString();
+                        float targetValue = numberToFloatParser(element.get(SLI_TARGET_VALUE));
+                        boolean violated = (boolean) element.get(SLI_TARGET_VIOLATED);
 
                         sliTargets.add(new KeptnCloudEventSLITarget(criteria, targetValue, violated));
                     } catch (Exception e) {
@@ -141,49 +144,4 @@ public class KeptnCloudEventEvaluationData extends KeptnCloudEventData {
 
         return  result;
     }
-/*
-    TODO: add test, deployment and evaluation classes probably for all events (evaluation 2 different types)
-    //Triggered:
-    private Object test;
-            private String start;
-            private String end;
-
-    private Object evaluation;
-            private String start;
-            private String end;
-            private String timeframe;
-
-    private Object deployment;
-            private String[] deploymentNames;
-
-    //Started
-    //Status changed
-    //Finished
-    private Object evaluation;
-            private String timeStart;
-            private String timeEnd;
-            private String result;
-            private String score;
-            private String sloFileContent;
-            private LinkedHashMap indicatorResults; //(SLIEvaluationResult)
-                    private float score;
-                    private Object value; //(SLIResult)
-                            private String metric;
-                            private float value;
-                            private boolean success;
-                            private String message;
-                    private String displayName;
-                    private Object[] passTargets; //(SLITarget)
-                            private String criteria;
-                            private float targetValue;
-                            private boolean violated;
-                    private Object[] warningTargets; //(SLITarget)
-
-                    private boolean keySli;
-                    private String/Enum status;
-            private String[] comparedEvents;
-            private String gitCommit;
-
-     */
 }
-

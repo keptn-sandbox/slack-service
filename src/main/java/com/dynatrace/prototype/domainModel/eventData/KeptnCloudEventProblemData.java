@@ -5,8 +5,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.LinkedHashMap;
 
 public class KeptnCloudEventProblemData extends KeptnCloudEventData {
-    //TODO: check if fields have to start with capital letter
-
     @JsonProperty(value = "State")
     private String state;
     @JsonProperty(value = "ProblemID")
@@ -55,17 +53,4 @@ public class KeptnCloudEventProblemData extends KeptnCloudEventData {
     public String getTags() {
         return tags;
     }
-
-    /*
-    //PROBLEM
-    private String state;
-    private String problemID;
-    private String problemTitle;
-    private String problemDetails;
-    private String PID;
-    private String problemURL;
-    private String impactedEntity;
-    private String tags;
-
-     */
 }

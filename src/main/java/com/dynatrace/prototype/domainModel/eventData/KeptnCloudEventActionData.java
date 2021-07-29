@@ -52,22 +52,4 @@ public class KeptnCloudEventActionData extends KeptnCloudEventData {
 
         return additionalValues;
     }
-
-/*
-    TODO: add test, deployment and evaluation classes probably for all events (evaluation 2 different types)
-    private Object problem; //(ProblemDetails)
-            private String problenTitel;
-            private String rootCause;
-
-    private int actionIndex;
-
-    private Object action; //(ActionInfo)
-            private String name;
-            private String action;
-            private String description;
-            private * *additional*; //(additional properties are allowed) //TODO: Danger
-
-     */
-    //TODO: maybe merch witch KeptnCloudEventActionData
 }
-

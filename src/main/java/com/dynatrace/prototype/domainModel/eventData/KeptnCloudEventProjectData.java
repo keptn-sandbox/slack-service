@@ -9,17 +9,4 @@ public class KeptnCloudEventProjectData extends KeptnCloudEventData {
     public KeptnCloudEventProjectFinishedData getCreatedProject() {
         return createdProject;
     }
-
-    /*
-    //Project create
-    private String projectName;
-    private String gitRemoteURL;
-    private String shipyard;
-
-    private Object createdProject;
-            private String projectName;
-            private String gitRemoteURL;
-            private String shipyard;
-
-     */
 }

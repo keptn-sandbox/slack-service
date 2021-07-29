@@ -5,8 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.Objects;
 
 public class KeptnCloudEventDeploymentExtension extends KeptnCloudEventData {
-    private static final String DEPLOYMENT_URIS_PUBLIC = "deploymentURIsPublic", DEPLOYMENT_URIS_LOCAL = "deploymentURIsLocal", DEPLOYMENT_NAMES = "deploymentNames";
-
+    private static final String DEPLOYMENT_URIS_PUBLIC = "deploymentURIsPublic", DEPLOYMENT_URIS_LOCAL = "deploymentURIsLocal", DEPLOYMENT_NAMES = "deploymentNames", DEPLOYMENT_GIT_COMMIT = "gitCommit";
     private LinkedHashMap<String, ?> deployment;
 
     public LinkedHashMap<String, ?> getDeployment() {
@@ -29,8 +28,8 @@ public class KeptnCloudEventDeploymentExtension extends KeptnCloudEventData {
         return getFirstDeploymentURI(DEPLOYMENT_URIS_LOCAL);
     }
 
-    public ArrayList getDeploymentNames() {
-        ArrayList deploymentNames = null;
+    public ArrayList<String> getDeploymentNames() {
+        ArrayList<String> deploymentNames = null;
 
         if (deployment != null) {
             deploymentNames = parseObjectToArrayList(deployment.get(DEPLOYMENT_NAMES));
@@ -40,12 +39,12 @@ public class KeptnCloudEventDeploymentExtension extends KeptnCloudEventData {
     }
 
     public String getDeploymentGitCommit() {
-        return getValueOfLinkedHashMap(deployment, "gitCommit");
+        return getValueOfLinkedHashMap(deployment, DEPLOYMENT_GIT_COMMIT);
     }
 
     private String getFirstDeploymentURI(String type) {
         String firstURI = null;
-        ArrayList deploymentURIs = getDeploymentURIs(type);
+        ArrayList<String> deploymentURIs = getDeploymentURIs(type);
 
         if (deploymentURIs != null) {
             firstURI = Objects.toString(deploymentURIs.get(0));
