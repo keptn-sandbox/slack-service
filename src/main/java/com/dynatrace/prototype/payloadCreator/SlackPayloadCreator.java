@@ -17,11 +17,10 @@ import java.util.*;
 import static com.slack.api.model.block.composition.BlockCompositions.markdownText;
 
 @ApplicationScoped
-public class SlackPayloadCreator implements PayloadCreator {
+public class SlackPayloadCreator {
     private static final String ENV_KEPTN_BRIDGE_DOMAIN = "KEPTN_BRIDGE_DOMAIN";
 
-    @Override
-    public String createPayload(KeptnCloudEvent event) {
+    public List<LayoutBlock> createPayload(KeptnCloudEvent event) {
         final String PROJECT = "project";
         final String STAGE = "stage";
         final String SERVICE = "service";
@@ -37,7 +36,7 @@ public class SlackPayloadCreator implements PayloadCreator {
         String eventStatus = null;
         String eventResult = null;
         String eventMessage = null;
-        String keptnBridgeDomain = System.getenv(ENV_KEPTN_BRIDGE_DOMAIN);
+        String keptnBridgeDomain = System.getenv(ENV_KEPTN_BRIDGE_DOMAIN); //TODO: handle if null
         String eventURL = "http://" + keptnBridgeDomain + "/bridge/dashboard";
         Object eventDataObject = event.getData();
 
@@ -204,7 +203,7 @@ public class SlackPayloadCreator implements PayloadCreator {
         }
         layoutBlockList.add(createSlackBlock(DividerBlock.TYPE));
 
-        return parseBlockListToJSON(layoutBlockList);
+        return layoutBlockList;
     }
 
     /**
