@@ -2,11 +2,7 @@ package com.dynatrace.prototype.domainModel;
 
 import com.dynatrace.prototype.domainModel.eventData.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import java.util.Objects;
 
 public class KeptnCloudEventParser {
 
@@ -14,7 +10,7 @@ public class KeptnCloudEventParser {
         ObjectMapper objectMapper = new ObjectMapper(); //TODO: maybe use only one mapper because it is thread-save
         KeptnCloudEvent result = objectMapper.readValue(jsonString, KeptnCloudEvent.class);
 
-        if (parseDataPayload(result, jsonString)) {
+        if (parseDataPayload(result)) {
             System.out.println("Parsed event data value successfully.");
         } else {
             System.out.println("WARN: Failed to pass event data value (general parsing provided).");
@@ -23,7 +19,7 @@ public class KeptnCloudEventParser {
         return result;
     }
 
-    private static boolean parseDataPayload(KeptnCloudEvent event, String json) {
+    private static boolean parseDataPayload(KeptnCloudEvent event) {
         boolean parsed = true;
         ObjectMapper mapper = new ObjectMapper();
         String eventType = event.getType();
