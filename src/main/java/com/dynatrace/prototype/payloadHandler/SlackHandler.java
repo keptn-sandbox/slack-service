@@ -1,27 +1,47 @@
 package com.dynatrace.prototype.payloadHandler;
 
 import com.dynatrace.prototype.domainModel.KeptnCloudEvent;
-import com.dynatrace.prototype.payloadCreator.SlackPayloadCreator;
+import com.dynatrace.prototype.payloadCreator.*;
 import com.slack.api.Slack;
 import com.slack.api.methods.SlackApiException;
-import com.slack.api.methods.SlackApiRequest;
 import com.slack.api.methods.request.chat.ChatPostMessageRequest;
 import com.slack.api.methods.response.chat.ChatPostMessageResponse;
 import com.slack.api.model.block.LayoutBlock;
 
 import javax.enterprise.context.ApplicationScoped;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 @ApplicationScoped
 public class SlackHandler implements KeptnCloudEventHandler {
     private static final String ENV_SLACK_TOKEN = "SLACK_TOKEN";
     private static final String ENV_SLACK_CHANNEL = "SLACK_CHANNEL";
+    private static final String SLACK_NOTIFICATION_MSG = "A new Keptn Event arrived.";
+
+    private LinkedHashSet<KeptnCloudEventDecorator> decorators;
+
+    public SlackHandler() {
+        this.decorators = new LinkedHashSet<>();
+
+        decorators.add(new ProjectDecorator());
+        decorators.add(new ServiceDecorator());
+        decorators.add(new ApprovalDecorator());
+        decorators.add(new DeploymentDecorator());
+        decorators.add(new TestDecorator());
+        decorators.add(new EvaluationDecorator());
+        decorators.add(new ReleaseDecorator());
+        decorators.add(new GetActionDecorator());
+        decorators.add(new GetSLIDecorator());
+        decorators.add(new ProblemDecorator());
+        //is a default decorator needed?
+    }
 
     @Override
     public boolean handleEvent(KeptnCloudEvent event) {
         boolean successful = false;
-        SlackPayloadCreator slackPayloadCreator = new SlackPayloadCreator();
         Slack slack = Slack.getInstance();
         String token = System.getenv(ENV_SLACK_TOKEN);
         String channel = System.getenv(ENV_SLACK_CHANNEL);
@@ -32,10 +52,20 @@ public class SlackHandler implements KeptnCloudEventHandler {
             System.err.println(ENV_SLACK_CHANNEL +" is null!");
         } else {
             try {
-                List<LayoutBlock> layoutBlockList = slackPayloadCreator.createPayload(event);
+                List<LayoutBlock> layoutBlockList = new ArrayList<>();
+                boolean foundRightDecorator = false;
+                Iterator<KeptnCloudEventDecorator> decoratorIterator = decorators.iterator();
+
+                while (!foundRightDecorator && decoratorIterator.hasNext()) {
+                    layoutBlockList.addAll(decoratorIterator.next().getSpecificData(event));
+                    if (layoutBlockList.size() > 0) {
+                        foundRightDecorator = true;
+                    }
+                }
+
                 ChatPostMessageRequest request = ChatPostMessageRequest.builder()
                         .channel(channel)
-                        .text("A new Keptn Event arrived.")
+                        .text(SLACK_NOTIFICATION_MSG)
                         .blocks(layoutBlockList)
                         .build();
                 ChatPostMessageResponse response = slack.methods(token).chatPostMessage(request);
