@@ -29,15 +29,15 @@ public class ProblemDecorator extends KeptnCloudEventDecorator {
 
         if (eventDataObject instanceof KeptnCloudEventProblemData) {
             KeptnCloudEventProblemData eventData = (KeptnCloudEventProblemData) eventDataObject;
-            String specificDataString = "";
+            StringBuilder specificDataSB = new StringBuilder();
 
-            specificDataString += ifNotNull("State: ", eventData.getState(), "\n");
-            specificDataString += ifNotNull("Problem ID: ", eventData.getProblemID(), "\n");
-            specificDataString += ifNotNull("Problem Title: ", eventData.getProblemTitle(), "\n");
-            specificDataString += ifNotNull(null, formatLink(eventData.getProblemURL(), "Problem URL"), "\n");
+            specificDataSB.append(ifNotNull("State: ", eventData.getState(), "\n"));
+            specificDataSB.append(ifNotNull("Problem ID: ", eventData.getProblemID(), "\n"));
+            specificDataSB.append(ifNotNull("Problem Title: ", eventData.getProblemTitle(), "\n"));
+            specificDataSB.append(ifNotNull(null, formatLink(eventData.getProblemURL(), "Problem URL"), "\n"));
 
-            if (!specificDataString.isBlank()) {
-                layoutBlockList.add(createSlackBlock(SectionBlock.TYPE, specificDataString));
+            if (specificDataSB.length() > 0) {
+                layoutBlockList.add(createSlackBlock(SectionBlock.TYPE, specificDataSB.toString()));
                 layoutBlockList.add(createSlackDividerBlock());
             }
         } else {

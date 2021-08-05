@@ -30,14 +30,14 @@ public class DeploymentDecorator extends KeptnCloudEventDecorator {
 
         if (eventDataObject instanceof KeptnCloudEventDeploymentData) {
             KeptnCloudEventDeploymentData eventData = (KeptnCloudEventDeploymentData) eventDataObject;
-            String specificDataString = "";
+            StringBuilder specificDataSB = new StringBuilder();
 
-            specificDataString += ifNotNull(null, formatLink(eventData.getFirstDeploymentURIPublic(), "Public URI"), "\n");
-            specificDataString += ifNotNull(null, formatLink(eventData.getFirstDeploymentURILocal(), "Local URI"), "\n");
-            specificDataString += ifNotNull("Deployment names: ", Objects.toString(eventData.getDeploymentNames()), "\n");
+            specificDataSB.append(ifNotNull(null, formatLink(eventData.getFirstDeploymentURIPublic(), "Public URI"), "\n"));
+            specificDataSB.append(ifNotNull(null, formatLink(eventData.getFirstDeploymentURILocal(), "Local URI"), "\n"));
+            specificDataSB.append(ifNotNull("Deployment names: ", Objects.toString(eventData.getDeploymentNames()), "\n"));
 
-            if (!specificDataString.isBlank()) {
-                layoutBlockList.add(createSlackBlock(SectionBlock.TYPE, specificDataString));
+            if (specificDataSB.length() > 0) {
+                layoutBlockList.add(createSlackBlock(SectionBlock.TYPE, specificDataSB.toString()));
                 layoutBlockList.add(createSlackDividerBlock());
             }
         } else {

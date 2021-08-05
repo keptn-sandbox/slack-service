@@ -45,14 +45,16 @@ public abstract class KeptnCloudEventDecorator {
 
             if (eventDataObject instanceof KeptnCloudEventData) {
                 KeptnCloudEventData eventData = (KeptnCloudEventData) eventDataObject;
-                String eventURL = APP_LAYER_PROTOCOL +"://" +keptnBridgeDomain +KEPTN_BRIDGE_DASHBOARD;
+                StringBuilder eventURLSB = new StringBuilder();
+                eventURLSB.append(APP_LAYER_PROTOCOL).append("://").append(keptnBridgeDomain).append(KEPTN_BRIDGE_DASHBOARD);
 
                 if (eventData.getProject() != null) {
-                    eventURL = APP_LAYER_PROTOCOL +"://" +keptnBridgeDomain +KEPTN_BRIDGE_PROJECT
-                            +eventData.getProject() +"/sequence" +event.getShkeptncontext() +"/event/" +event.getId();
+                    eventURLSB.append(APP_LAYER_PROTOCOL).append("://").append(keptnBridgeDomain)
+                            .append(KEPTN_BRIDGE_PROJECT).append(eventData.getProject()).append("/sequence")
+                            .append(event.getShkeptncontext()).append("/event/").append(event.getId());
                 }
 
-                layoutBlockList.add(createSlackBlock(SectionBlock.TYPE, formatLink(eventURL, KEPTN_BRIDGE_NAME)));
+                layoutBlockList.add(createSlackBlock(SectionBlock.TYPE, formatLink(eventURLSB.toString(), KEPTN_BRIDGE_NAME)));
                 layoutBlockList.add(createSlackDividerBlock());
             }
         }
@@ -68,19 +70,19 @@ public abstract class KeptnCloudEventDecorator {
      * @return key +value or an empty String ("")
      */
     protected String ifNotNull(String prefix, String value, String postfix) {
-        String result = "";
+        StringBuilder resultSB = new StringBuilder();
 
-        if (value != null && !value.isBlank() && !value.equals("null")) {
+        if (value != null && !value.isBlank() && !"null".equals(value)) {
             if (prefix != null) {
-                result = prefix;
+                resultSB.append(prefix);
             }
-            result += value;
+            resultSB.append(value);
             if (postfix != null) {
-                result += postfix;
+                resultSB.append(postfix);
             }
         }
 
-        return result;
+        return resultSB.toString();
     }
 
     /**
@@ -93,8 +95,8 @@ public abstract class KeptnCloudEventDecorator {
     protected String formatLink(String link, String displayText) {
         String formattedEmail = null;
 
-        if (link != null) {
-            formattedEmail = "<" +link +"|" +displayText +">";
+        if (link != null && displayText != null) {
+            formattedEmail = String.format("<%1$s|%2$s>", link, displayText);
         }
 
         return formattedEmail;

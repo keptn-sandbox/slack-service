@@ -39,6 +39,7 @@ public class EvaluationDecorator extends KeptnCloudEventDecorator {
             specificDataSB.append(ifNotNull("Result: ", eventData.getEvaluationResult(), "\n"));
             specificDataSB.append(ifNotNull("Score: ", eventData.getEvaluationScore(), "\n"));
 
+            //TODO: message need to be changed
             HashSet<SLIEvaluationResult> sliResultSet = eventData.getSLIEvaluationResults();
             if (sliResultSet != null) {
                 Iterator<SLIEvaluationResult> sliResIterator = sliResultSet.iterator();

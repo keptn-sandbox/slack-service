@@ -30,19 +30,19 @@ public class ServiceDecorator extends KeptnCloudEventDecorator {
 
         if (eventDataObject instanceof KeptnCloudEventData) {
             KeptnCloudEventData eventData = (KeptnCloudEventData) eventDataObject;
-            String specificDataString = "";
+            StringBuilder specificDataSB = new StringBuilder();
             String serviceName = eventData.getService();
             KeptnCloudEventDataResult eventResult = eventData.getResult();
             String eventStage = eventData.getStage();
 
             if (KeptnCloudEventDataResult.PASS.getValue().equals(eventResult.getValue())) {
-                specificDataString += ifNotNull("The service '", serviceName, "' was successfully created in the stage '" +eventStage +"'.");
+                specificDataSB.append(ifNotNull("The service '", serviceName, "' was successfully created in the stage '" +eventStage +"'."));
             } else if (KeptnCloudEventDataResult.FAIL.getValue().equals(eventResult.getValue())) {
-                specificDataString += ifNotNull("There was an error creating the service '", serviceName, "' in the stage '" +eventStage +"' !");
+                specificDataSB.append(ifNotNull("There was an error creating the service '", serviceName, "' in the stage '" +eventStage +"' !"));
             }
 
-            if (!specificDataString.isBlank()) {
-                layoutBlockList.add(createSlackBlock(SectionBlock.TYPE, specificDataString));
+            if (specificDataSB.length() > 0) {
+                layoutBlockList.add(createSlackBlock(SectionBlock.TYPE, specificDataSB.toString()));
                 layoutBlockList.add(createSlackDividerBlock());
             }
         } else {

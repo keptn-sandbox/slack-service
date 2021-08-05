@@ -34,20 +34,20 @@ public class ProjectDecorator extends KeptnCloudEventDecorator {
         if (eventDataObject instanceof KeptnCloudEventProjectData) {
             KeptnCloudEventProjectData eventData = (KeptnCloudEventProjectData) eventDataObject;
             KeptnCloudEventProjectFinishedData createdProject = eventData.getCreatedProject();
-            String specificDataString = "";
+            StringBuilder specificDataSB = new StringBuilder();
 
             if (createdProject != null) {
                 String projectName = createdProject.getProjectName();
                 KeptnCloudEventDataResult eventResult = eventData.getResult();
 
                 if (KeptnCloudEventDataResult.PASS.getValue().equals(eventResult.getValue())) {
-                    specificDataString += ifNotNull("The project '", projectName, "' was successfully created.");
+                    specificDataSB.append(ifNotNull("The project '", projectName, "' was successfully created."));
                 } else if (KeptnCloudEventDataResult.FAIL.getValue().equals(eventResult.getValue())) {
-                    specificDataString += ifNotNull("There was an error creating the project '", projectName, "' !");
+                    specificDataSB.append(ifNotNull("There was an error creating the project '", projectName, "' !"));
                 }
             }
-            if (!specificDataString.isBlank()) {
-                layoutBlockList.add(createSlackBlock(SectionBlock.TYPE, specificDataString));
+            if (specificDataSB.length() > 0) {
+                layoutBlockList.add(createSlackBlock(SectionBlock.TYPE, specificDataSB.toString()));
                 layoutBlockList.add(createSlackDividerBlock());
             }
         } else {

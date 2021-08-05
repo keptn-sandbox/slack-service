@@ -29,12 +29,12 @@ public class GetSLIDecorator extends KeptnCloudEventDecorator {
 
         if (eventDataObject instanceof KeptnCloudEventGetSLIData) {
             KeptnCloudEventGetSLIData eventData = (KeptnCloudEventGetSLIData) eventDataObject;
-            String specificDataString = "";
+            StringBuilder specificDataSB = new StringBuilder();
 
-            specificDataString += ifNotNull("Sli Provider: ", eventData.getSliProvider(), "\n");
+            specificDataSB.append(ifNotNull("Sli Provider: ", eventData.getSliProvider(), "\n"));
 
-            if (!specificDataString.isBlank()) {
-                layoutBlockList.add(createSlackBlock(SectionBlock.TYPE, specificDataString));
+            if (specificDataSB.length() > 0) {
+                layoutBlockList.add(createSlackBlock(SectionBlock.TYPE, specificDataSB.toString()));
                 layoutBlockList.add(createSlackDividerBlock());
             }
         } else {

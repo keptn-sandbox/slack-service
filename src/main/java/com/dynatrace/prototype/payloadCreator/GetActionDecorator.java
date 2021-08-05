@@ -30,17 +30,17 @@ public class GetActionDecorator extends KeptnCloudEventDecorator {
 
         if (eventDataObject instanceof KeptnCloudEventActionData) {
             KeptnCloudEventActionData eventData = (KeptnCloudEventActionData) eventDataObject;
-            String specificDataString = "";
+            StringBuilder specificDataSB = new StringBuilder();
 
-            specificDataString += ifNotNull("Problem title: ", eventData.getProblemTitle(), "\n");
-            specificDataString += ifNotNull("Problem root cause: ", eventData.getProblemRootCause(), "\n");
-            specificDataString += ifNotNull("Action name: ", eventData.getActionName(), "\n");
-            specificDataString += ifNotNull("Action: ", eventData.getRealAction(), "\n");
-            specificDataString += ifNotNull("Action description: ", eventData.getActionDescription(), "\n");
-            specificDataString += ifNotNull("Additional action values: ", Objects.toString(eventData.getAdditionalActionValues()), "\n");
+            specificDataSB.append(ifNotNull("Problem title: ", eventData.getProblemTitle(), "\n"));
+            specificDataSB.append(ifNotNull("Problem root cause: ", eventData.getProblemRootCause(), "\n"));
+            specificDataSB.append(ifNotNull("Action name: ", eventData.getActionName(), "\n"));
+            specificDataSB.append(ifNotNull("Action: ", eventData.getRealAction(), "\n"));
+            specificDataSB.append(ifNotNull("Action description: ", eventData.getActionDescription(), "\n"));
+            specificDataSB.append(ifNotNull("Additional action values: ", Objects.toString(eventData.getAdditionalActionValues()), "\n"));
 
-            if (!specificDataString.isBlank()) {
-                layoutBlockList.add(createSlackBlock(SectionBlock.TYPE, specificDataString));
+            if (specificDataSB.length() > 0) {
+                layoutBlockList.add(createSlackBlock(SectionBlock.TYPE, specificDataSB.toString()));
                 layoutBlockList.add(createSlackDividerBlock());
             }
         } else {

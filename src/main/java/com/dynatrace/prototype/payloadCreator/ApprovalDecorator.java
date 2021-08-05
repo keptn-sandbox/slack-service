@@ -29,13 +29,13 @@ public class ApprovalDecorator extends KeptnCloudEventDecorator {
 
         if (eventDataObject instanceof KeptnCloudEventApprovalData) {
             KeptnCloudEventApprovalData eventData = (KeptnCloudEventApprovalData) eventDataObject;
-            String specificDataString = "";
+            StringBuilder specificDataSB = new StringBuilder();
 
-            specificDataString += ifNotNull("Pass: ", eventData.getApprovalPass(), "\n");
-            specificDataString += ifNotNull("Warning: ", eventData.getApprovalWarning(), "\n");
+            specificDataSB.append(ifNotNull("Pass: ", eventData.getApprovalPass(), "\n"));
+            specificDataSB.append(ifNotNull("Warning: ", eventData.getApprovalWarning(), "\n"));
 
-            if (!specificDataString.isBlank()) {
-                layoutBlockList.add(createSlackBlock(SectionBlock.TYPE, specificDataString));
+            if (specificDataSB.length() > 0) {
+                layoutBlockList.add(createSlackBlock(SectionBlock.TYPE, specificDataSB.toString()));
                 layoutBlockList.add(createSlackDividerBlock());
             }
         } else {

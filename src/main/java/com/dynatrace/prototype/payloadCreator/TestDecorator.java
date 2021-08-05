@@ -29,16 +29,16 @@ public class TestDecorator extends KeptnCloudEventDecorator {
 
         if (eventDataObject instanceof KeptnCloudEventTestData) {
             KeptnCloudEventTestData eventData = (KeptnCloudEventTestData) eventDataObject;
-            String specificDataString = "";
+            StringBuilder specificDataSB = new StringBuilder();
 
-            specificDataString += ifNotNull("Start: ", eventData.getTestStart(), "\n");
-            specificDataString += ifNotNull("End: ", eventData.getTestEnd(), "\n");
-            specificDataString += ifNotNull(null, formatLink(eventData.getFirstDeploymentURIPublic(), "Public URI"), "\n");
-            specificDataString += ifNotNull(null, formatLink(eventData.getFirstDeploymentURILocal(), "Local URI"), "\n");
-            specificDataString += ifNotNull("Git commit: ", eventData.getTestGitCommit(), "\n");
+            specificDataSB.append(ifNotNull("Start: ", eventData.getTestStart(), "\n"));
+            specificDataSB.append(ifNotNull("End: ", eventData.getTestEnd(), "\n"));
+            specificDataSB.append(ifNotNull(null, formatLink(eventData.getFirstDeploymentURIPublic(), "Public URI"), "\n"));
+            specificDataSB.append(ifNotNull(null, formatLink(eventData.getFirstDeploymentURILocal(), "Local URI"), "\n"));
+            specificDataSB.append(ifNotNull("Git commit: ", eventData.getTestGitCommit(), "\n"));
 
-            if (!specificDataString.isBlank()) {
-                layoutBlockList.add(createSlackBlock(SectionBlock.TYPE, specificDataString));
+            if (specificDataSB.length() > 0) {
+                layoutBlockList.add(createSlackBlock(SectionBlock.TYPE, specificDataSB.toString()));
                 layoutBlockList.add(createSlackDividerBlock());
             }
         } else {
