@@ -2,8 +2,7 @@ package com.dynatrace.prototype;
 
 import com.dynatrace.prototype.domainModel.KeptnCloudEvent;
 import com.dynatrace.prototype.domainModel.KeptnCloudEventParser;
-import com.dynatrace.prototype.payloadHandler.PayloadHandler;
-import com.dynatrace.prototype.payloadCreator.PayloadCreator;
+import com.dynatrace.prototype.payloadHandler.KeptnCloudEventHandler;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import javax.inject.Inject;
@@ -17,9 +16,7 @@ import javax.ws.rs.core.MediaType;
 public class MainResource {
 
     @Inject
-    private PayloadHandler payloadHandler; //sends / writes the payload to something
-    @Inject
-    private PayloadCreator payloadCreator; //creates a payload out of a KeptnCloudEvent
+    private KeptnCloudEventHandler keptnCloudEventHandler;
 
     @POST
     @Consumes({MediaType.MEDIA_TYPE_WILDCARD})
@@ -30,10 +27,9 @@ public class MainResource {
 
         try {
             KeptnCloudEvent keptnCloudEvent = KeptnCloudEventParser.parseJsonToKeptnCloudEvent(event);
-            String message = payloadCreator.createPayload(keptnCloudEvent);
 
-            if (payloadHandler.sendPayload(message)) {
-                result = "Posted message: \"" +message +"\" successfully!";
+            if (keptnCloudEventHandler.handleEvent(keptnCloudEvent)) {
+                result = "Posted message successfully!";
             }
         } catch (JsonProcessingException e) {
             System.err.println(e.getMessage());
