@@ -12,7 +12,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
-public class EvaluationDecorator extends KeptnCloudEventDecorator {
+public class EvaluationMapper extends KeptnCloudEventMapper {
 
     @Override
     public List<LayoutBlock> getSpecificData(KeptnCloudEvent event) {

@@ -2,7 +2,7 @@ package com.dynatrace.prototype.payloadCreator;
 
 import com.dynatrace.prototype.domainModel.KeptnCloudEvent;
 import com.dynatrace.prototype.domainModel.KeptnEvent;
-import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventReleaseData;
+import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventDeploymentData;
 import com.slack.api.model.block.LayoutBlock;
 import com.slack.api.model.block.SectionBlock;
 
@@ -10,26 +10,26 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class ReleaseDecorator extends KeptnCloudEventDecorator {
+public class DeploymentMapper extends KeptnCloudEventMapper {
 
     @Override
     public List<LayoutBlock> getSpecificData(KeptnCloudEvent event) {
         List<LayoutBlock> layoutBlockList = new ArrayList<>();
 
-        if (event.getType().startsWith(KeptnEvent.RELEASE.getValue())) {
+        if (event.getType().startsWith(KeptnEvent.DEPLOYMENT.getValue())) {
             layoutBlockList.addAll(super.getSpecificData(event));
-            layoutBlockList.addAll(getReleaseData(event));
+            layoutBlockList.addAll(getDeploymentData(event));
         }
 
         return layoutBlockList;
     }
 
-    private List<LayoutBlock> getReleaseData(KeptnCloudEvent event) {
+    private List<LayoutBlock> getDeploymentData(KeptnCloudEvent event) {
         List<LayoutBlock> layoutBlockList = new ArrayList<>();
         Object eventDataObject = event.getData();
 
-        if (eventDataObject instanceof KeptnCloudEventReleaseData) {
-            KeptnCloudEventReleaseData eventData = (KeptnCloudEventReleaseData) eventDataObject;
+        if (eventDataObject instanceof KeptnCloudEventDeploymentData) {
+            KeptnCloudEventDeploymentData eventData = (KeptnCloudEventDeploymentData) eventDataObject;
             StringBuilder specificDataSB = new StringBuilder();
 
             specificDataSB.append(ifNotNull(null, formatLink(eventData.getFirstDeploymentURIPublic(), "Public URI"), "\n"));
@@ -41,7 +41,7 @@ public class ReleaseDecorator extends KeptnCloudEventDecorator {
                 layoutBlockList.add(createSlackDividerBlock());
             }
         } else {
-            System.out.println("WARN: eventData is not an instance of KeptnCloudEventReleaseData although the event type is \"Release\"!");
+            System.out.println("WARN: eventData is not an instance of KeptnCloudEventDeploymentData although the event type is \"Deployment\"!");
         }
 
         return layoutBlockList;

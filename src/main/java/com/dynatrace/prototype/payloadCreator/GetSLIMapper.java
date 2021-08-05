@@ -9,7 +9,7 @@ import com.slack.api.model.block.SectionBlock;
 import java.util.ArrayList;
 import java.util.List;
 
-public class GetSLIDecorator extends KeptnCloudEventDecorator {
+public class GetSLIMapper extends KeptnCloudEventMapper {
 
     @Override
     public List<LayoutBlock> getSpecificData(KeptnCloudEvent event) {

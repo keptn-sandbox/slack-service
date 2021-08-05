@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class GetActionDecorator extends KeptnCloudEventDecorator {
+public class GetActionMapper extends KeptnCloudEventMapper {
 
     @Override
     public List<LayoutBlock> getSpecificData(KeptnCloudEvent event) {

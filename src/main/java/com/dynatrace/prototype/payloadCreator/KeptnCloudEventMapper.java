@@ -12,7 +12,7 @@ import java.util.List;
 
 import static com.slack.api.model.block.composition.BlockCompositions.markdownText;
 
-public abstract class KeptnCloudEventDecorator {
+public abstract class KeptnCloudEventMapper {
     private static final String ENV_KEPTN_BRIDGE_DOMAIN = "KEPTN_BRIDGE_DOMAIN";
     private static final String APP_LAYER_PROTOCOL = "http";
     private static final String KEPTN_BRIDGE_NAME = "Keptn bridge";

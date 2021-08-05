@@ -10,7 +10,7 @@ import com.slack.api.model.block.SectionBlock;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ServiceDecorator extends KeptnCloudEventDecorator {
+public class ServiceMapper extends KeptnCloudEventMapper {
 
     @Override
     public List<LayoutBlock> getSpecificData(KeptnCloudEvent event) {

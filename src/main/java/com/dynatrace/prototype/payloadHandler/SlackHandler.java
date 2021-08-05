@@ -21,22 +21,22 @@ public class SlackHandler implements KeptnCloudEventHandler {
     private static final String ENV_SLACK_CHANNEL = "SLACK_CHANNEL";
     private static final String SLACK_NOTIFICATION_MSG = "A new Keptn Event arrived.";
 
-    private LinkedHashSet<KeptnCloudEventDecorator> decorators;
+    private LinkedHashSet<KeptnCloudEventMapper> mappers;
 
     public SlackHandler() {
-        this.decorators = new LinkedHashSet<>();
+        this.mappers = new LinkedHashSet<>();
 
-        decorators.add(new ProjectDecorator());
-        decorators.add(new ServiceDecorator());
-        decorators.add(new ApprovalDecorator());
-        decorators.add(new DeploymentDecorator());
-        decorators.add(new TestDecorator());
-        decorators.add(new EvaluationDecorator());
-        decorators.add(new ReleaseDecorator());
-        decorators.add(new GetActionDecorator());
-        decorators.add(new GetSLIDecorator());
-        decorators.add(new ProblemDecorator());
-        //is a default decorator needed?
+        mappers.add(new ProjectMapper());
+        mappers.add(new ServiceMapper());
+        mappers.add(new ApprovalMapper());
+        mappers.add(new DeploymentMapper());
+        mappers.add(new TestMapper());
+        mappers.add(new EvaluationMapper());
+        mappers.add(new ReleaseMapper());
+        mappers.add(new GetActionMapper());
+        mappers.add(new GetSLIMapper());
+        mappers.add(new ProblemMapper());
+        //is a default mapper needed?
     }
 
     @Override
@@ -54,7 +54,7 @@ public class SlackHandler implements KeptnCloudEventHandler {
             try {
                 List<LayoutBlock> layoutBlockList = new ArrayList<>();
                 boolean foundRightDecorator = false;
-                Iterator<KeptnCloudEventDecorator> decoratorIterator = decorators.iterator();
+                Iterator<KeptnCloudEventMapper> decoratorIterator = mappers.iterator();
 
                 while (!foundRightDecorator && decoratorIterator.hasNext()) {
                     layoutBlockList.addAll(decoratorIterator.next().getSpecificData(event));
