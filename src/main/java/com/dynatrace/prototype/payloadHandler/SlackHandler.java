@@ -53,14 +53,11 @@ public class SlackHandler implements KeptnCloudEventHandler {
         } else {
             try {
                 List<LayoutBlock> layoutBlockList = new ArrayList<>();
-                boolean foundRightDecorator = false;
                 Iterator<KeptnCloudEventMapper> decoratorIterator = mappers.iterator();
 
-                while (!foundRightDecorator && decoratorIterator.hasNext()) {
+                //TODO: move the general event info in the abstract mapper to a general mapper so if multiple mappers add info non of it adds it multiple times
+                for (KeptnCloudEventMapper mapper : mappers) {
                     layoutBlockList.addAll(decoratorIterator.next().getSpecificData(event));
-                    if (layoutBlockList.size() > 0) {
-                        foundRightDecorator = true;
-                    }
                 }
 
                 ChatPostMessageRequest request = ChatPostMessageRequest.builder()
