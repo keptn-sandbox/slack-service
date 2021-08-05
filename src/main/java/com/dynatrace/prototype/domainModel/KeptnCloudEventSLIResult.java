@@ -1,10 +1,10 @@
 package com.dynatrace.prototype.domainModel;
 
 public class KeptnCloudEventSLIResult {
-    String metric;
-    float value;
-    boolean success;
-    String message;
+    private String metric;
+    private float value;
+    private boolean success;
+    private String message;
 
     public KeptnCloudEventSLIResult(String metric, float value, boolean success, String message) {
         this.metric = metric;
