@@ -19,7 +19,6 @@ public class EvaluationMapper extends KeptnCloudEventMapper {
         List<LayoutBlock> layoutBlockList = new ArrayList<>();
 
         if (event.getType().startsWith(KeptnEvent.EVALUATION.getValue())) {
-            layoutBlockList.addAll(super.getSpecificData(event));
             layoutBlockList.addAll(getEvaluationData(event));
         }
 

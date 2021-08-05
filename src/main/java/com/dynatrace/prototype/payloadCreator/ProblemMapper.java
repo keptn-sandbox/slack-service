@@ -16,7 +16,6 @@ public class ProblemMapper extends KeptnCloudEventMapper {
         List<LayoutBlock> layoutBlockList = new ArrayList<>();
 
         if (event.getType().contains("problem") || event.getType().startsWith(KeptnEvent.PROBLEM.getValue())) {//TODO: check if Problem events start with sh.keptn.events or without the "s"
-            layoutBlockList.addAll(super.getSpecificData(event));
             layoutBlockList.addAll(getProblemData(event));
         }
 

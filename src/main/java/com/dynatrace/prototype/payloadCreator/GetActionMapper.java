@@ -17,7 +17,6 @@ public class GetActionMapper extends KeptnCloudEventMapper {
         List<LayoutBlock> layoutBlockList = new ArrayList<>();
 
         if (event.getType().startsWith(KeptnEvent.GET_ACTION.getValue()) || event.getType().startsWith(KeptnEvent.ACTION.getValue())) {
-            layoutBlockList.addAll(super.getSpecificData(event));
             layoutBlockList.addAll(getActionData(event));
         }
 

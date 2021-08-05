@@ -1,23 +1,14 @@
 package com.dynatrace.prototype.payloadCreator;
 
 import com.dynatrace.prototype.domainModel.KeptnCloudEvent;
-import com.dynatrace.prototype.domainModel.KeptnEvent;
-import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventData;
 import com.slack.api.model.block.*;
 import com.slack.api.model.block.composition.PlainTextObject;
-import org.apache.maven.shared.utils.StringUtils;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static com.slack.api.model.block.composition.BlockCompositions.markdownText;
 
 public abstract class KeptnCloudEventMapper {
-    private static final String ENV_KEPTN_BRIDGE_DOMAIN = "KEPTN_BRIDGE_DOMAIN";
-    private static final String APP_LAYER_PROTOCOL = "http";
-    private static final String KEPTN_BRIDGE_NAME = "Keptn bridge";
-    private static final String KEPTN_BRIDGE_DASHBOARD = "/bridge/dashboard";
-    private static final String KEPTN_BRIDGE_PROJECT = "/bridge/project";
 
     /**
      * Returns the specific (relevant / important) data of the given KeptnCloudEvent in a list of LayoutBlock(s).
@@ -25,42 +16,7 @@ public abstract class KeptnCloudEventMapper {
      * @param event to extract
      * @return filled or empty list of LayoutBlock(s)
      */
-    public List<LayoutBlock> getSpecificData(KeptnCloudEvent event) {
-        List<LayoutBlock> layoutBlockList = new ArrayList<>();
-
-        String eventName = event.getType();
-        eventName = eventName.replace(KeptnEvent.SH_KEPTN_EVENT.getValue() +".", "");
-        eventName = StringUtils.capitalise(eventName);
-        eventName = StringUtils.reverse(StringUtils.reverse(eventName).replaceFirst("\\.", " - "));
-
-        if (!eventName.isBlank()) {
-            layoutBlockList.add(createSlackBlock(HeaderBlock.TYPE, eventName));
-        }
-
-        String keptnBridgeDomain = System.getenv(ENV_KEPTN_BRIDGE_DOMAIN);
-        if (keptnBridgeDomain == null) {
-            System.err.println(ENV_KEPTN_BRIDGE_DOMAIN +" is null!");
-        } else {
-            Object eventDataObject = event.getData();
-
-            if (eventDataObject instanceof KeptnCloudEventData) {
-                KeptnCloudEventData eventData = (KeptnCloudEventData) eventDataObject;
-                StringBuilder eventURLSB = new StringBuilder();
-                eventURLSB.append(APP_LAYER_PROTOCOL).append("://").append(keptnBridgeDomain).append(KEPTN_BRIDGE_DASHBOARD);
-
-                if (eventData.getProject() != null) {
-                    eventURLSB.append(APP_LAYER_PROTOCOL).append("://").append(keptnBridgeDomain)
-                            .append(KEPTN_BRIDGE_PROJECT).append(eventData.getProject()).append("/sequence")
-                            .append(event.getShkeptncontext()).append("/event/").append(event.getId());
-                }
-
-                layoutBlockList.add(createSlackBlock(SectionBlock.TYPE, formatLink(eventURLSB.toString(), KEPTN_BRIDGE_NAME)));
-                layoutBlockList.add(createSlackDividerBlock());
-            }
-        }
-
-        return layoutBlockList;
-    }
+    public abstract List<LayoutBlock> getSpecificData(KeptnCloudEvent event);
 
     /**
      * Returns key +value if value is not null nor blank, else an empty String ("")

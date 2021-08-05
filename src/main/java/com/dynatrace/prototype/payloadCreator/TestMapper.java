@@ -16,7 +16,6 @@ public class TestMapper extends KeptnCloudEventMapper {
         List<LayoutBlock> layoutBlockList = new ArrayList<>();
 
         if (event.getType().startsWith(KeptnEvent.TEST.getValue())) {
-            layoutBlockList.addAll(super.getSpecificData(event));
             layoutBlockList.addAll(getTestData(event));
         }
 

@@ -11,7 +11,6 @@ import com.slack.api.model.block.LayoutBlock;
 import javax.enterprise.context.ApplicationScoped;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 
@@ -26,6 +25,7 @@ public class SlackHandler implements KeptnCloudEventHandler {
     public SlackHandler() {
         this.mappers = new LinkedHashSet<>();
 
+        mappers.add(new GeneralEventMapper());
         mappers.add(new ProjectMapper());
         mappers.add(new ServiceMapper());
         mappers.add(new ApprovalMapper());
@@ -36,7 +36,6 @@ public class SlackHandler implements KeptnCloudEventHandler {
         mappers.add(new GetActionMapper());
         mappers.add(new GetSLIMapper());
         mappers.add(new ProblemMapper());
-        //is a default mapper needed?
     }
 
     @Override
@@ -53,11 +52,9 @@ public class SlackHandler implements KeptnCloudEventHandler {
         } else {
             try {
                 List<LayoutBlock> layoutBlockList = new ArrayList<>();
-                Iterator<KeptnCloudEventMapper> decoratorIterator = mappers.iterator();
 
-                //TODO: move the general event info in the abstract mapper to a general mapper so if multiple mappers add info non of it adds it multiple times
                 for (KeptnCloudEventMapper mapper : mappers) {
-                    layoutBlockList.addAll(decoratorIterator.next().getSpecificData(event));
+                    layoutBlockList.addAll(mapper.getSpecificData(event));
                 }
 
                 ChatPostMessageRequest request = ChatPostMessageRequest.builder()
