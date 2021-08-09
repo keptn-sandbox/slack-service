@@ -57,12 +57,13 @@ public class ApprovalMapper extends KeptnCloudEventMapper {
             } else if (project == null) {
                 System.err.println("Project of approval is null!");
             } else {
-                if (KeptnCloudEventDataResult.PASS.getValue().equals(result.getValue()) && MANUAL.equals(pass) ||
-                        KeptnCloudEventDataResult.WARNING.getValue().equals(result.getValue()) && MANUAL.equals(warning)) {
+                if (KeptnCloudEventDataResult.PASS.equals(result) && MANUAL.equals(pass) ||
+                        KeptnCloudEventDataResult.WARNING.equals(result) && MANUAL.equals(warning)) {
                     message.append(String.format("Do you want to promote from stage '%1$s' the service '%2$s' of the project '%3$s'?", stage, service, project));
                     manual = true;
+                } else if (KeptnCloudEventDataResult.FAIL.equals(result)) {
+                    message.append(String.format("There was an error when approving the service '%1$s' from stage '%2$s' of the project '%3$s'.", service, stage, project));
                 } else {
-                    //TODO: what should I do if the result is "fail"?
                     message.append(String.format("The service '%1$s' from stage '%2$s' of the project '%3$s' was promoted.", service, stage, project));
                 }
             }
