@@ -7,6 +7,7 @@ import com.dynatrace.prototype.ApprovalService;
 import com.dynatrace.prototype.domainModel.*;
 import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventApprovalData;
 import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventProblemData;
+import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventProblemData;
 import com.dynatrace.prototype.payloadCreator.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.slack.api.Slack;
@@ -116,6 +117,36 @@ public class SlackHandler implements KeptnCloudEventHandler {
 
         if (payload instanceof BlockActionPayload) {
             BlockActionPayload actionPayload = (BlockActionPayload) payload;
+            List<Attachment> attachments = actionPayload.getMessage().getAttachments();
+
+            if (attachments.size() > 0) {
+                List<BlockActionPayload.Action> actions = actionPayload.getActions();
+                Attachment attachment = attachments.get(0);
+                List<LayoutBlock> newBlocks;
+                List<LayoutBlock> oldBlocks = attachment.getBlocks();
+                ListIterator<LayoutBlock> blockIterator = oldBlocks.listIterator();
+                int firstDividerIndex = oldBlocks.size();
+
+                while (firstDividerIndex == oldBlocks.size() && blockIterator.hasNext()) {
+                    LayoutBlock current = blockIterator.next();
+
+                    if (current instanceof DividerBlock) {
+                        firstDividerIndex = blockIterator.nextIndex();
+                    }
+                }
+
+                newBlocks = oldBlocks.subList(0, firstDividerIndex);
+                if (!newBlocks.isEmpty()) {
+                    if (actions.size() > 0) {
+                        BlockActionPayload.Action action = actions.get(0);
+                        //TODO: handle value of pressed button with action.getValue() to approve / deny the approval
+                        //TODO: maybe create own class for creating slack blocks
+                        newBlocks.add(SectionBlock.builder().text(MarkdownTextObject.builder().text("*" +action.getText().getText() +"*").build()).build());
+                        attachment.setBlocks(newBlocks);
+                    }
+                }
+
+            }
 
             ChatUpdateRequest updateRequest = ChatUpdateRequest.builder()
                     .channel(actionPayload.getChannel().getId())
