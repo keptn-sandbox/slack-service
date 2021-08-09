@@ -3,7 +3,12 @@ package com.dynatrace.prototype;
 import com.dynatrace.prototype.domainModel.KeptnCloudEvent;
 import com.dynatrace.prototype.domainModel.KeptnCloudEventParser;
 import com.dynatrace.prototype.payloadHandler.KeptnCloudEventHandler;
+import com.dynatrace.prototype.payloadHandler.SlackHandler;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.gson.Gson;
+import com.slack.api.app_backend.interactive_components.payload.BlockActionPayload;
+import com.slack.api.app_backend.util.JsonPayloadExtractor;
+import com.slack.api.util.json.GsonFactory;
 
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
@@ -36,6 +41,25 @@ public class MainResource {
         }
 
         return result;
+    }
+
+    @POST
+    @Consumes({MediaType.APPLICATION_FORM_URLENCODED})
+    @Path("/slackUserInput")
+    public String handleSlackUserInput(String payload) {
+        JsonPayloadExtractor extractor = new JsonPayloadExtractor();
+        Gson gson = GsonFactory.createSnakeCase();
+
+        try {
+            String jsonPayload = extractor.extractIfExists(payload);
+            BlockActionPayload blockActionPayload = gson.fromJson(jsonPayload, BlockActionPayload.class);
+            //TODO: need to be changed
+            SlackHandler slackHandler = new SlackHandler();
+            slackHandler.sendEvent(blockActionPayload);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
 }
