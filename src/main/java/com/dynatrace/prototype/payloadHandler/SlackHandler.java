@@ -52,7 +52,7 @@ public class SlackHandler implements KeptnCloudEventHandler {
     }
 
     @Override
-    public boolean handleEvent(KeptnCloudEvent event) {
+    public boolean receiveEvent(KeptnCloudEvent event) {
         boolean successful = false;
         Slack slack = Slack.getInstance();
         String token = System.getenv(ENV_SLACK_TOKEN);
@@ -91,63 +91,66 @@ public class SlackHandler implements KeptnCloudEventHandler {
         return successful;
     }
 
-    public boolean sendEvent(BlockActionPayload payload) {
+    public boolean sendEvent(Object payload) {
         boolean successful = false;
 
         Slack slack = Slack.getInstance();
         String token = System.getenv(ENV_SLACK_TOKEN);
 
-        List<Attachment> attachments = payload.getMessage().getAttachments();
+        if (payload instanceof BlockActionPayload) {
+            BlockActionPayload actionPayload = (BlockActionPayload) payload;
+            List<Attachment> attachments = actionPayload.getMessage().getAttachments();
 
-        if (attachments.size() > 0) {
-            List<BlockActionPayload.Action> actions = payload.getActions();
-            Attachment attachment = attachments.get(0);
-            List<LayoutBlock> newBlocks;
-            List<LayoutBlock> oldBlocks = attachment.getBlocks();
-            ListIterator<LayoutBlock> blockIterator = oldBlocks.listIterator();
-            int firstDividerIndex = oldBlocks.size();
+            if (attachments.size() > 0) {
+                List<BlockActionPayload.Action> actions = actionPayload.getActions();
+                Attachment attachment = attachments.get(0);
+                List<LayoutBlock> newBlocks;
+                List<LayoutBlock> oldBlocks = attachment.getBlocks();
+                ListIterator<LayoutBlock> blockIterator = oldBlocks.listIterator();
+                int firstDividerIndex = oldBlocks.size();
 
-            while (firstDividerIndex == oldBlocks.size() && blockIterator.hasNext()) {
-                LayoutBlock current = blockIterator.next();
+                while (firstDividerIndex == oldBlocks.size() && blockIterator.hasNext()) {
+                    LayoutBlock current = blockIterator.next();
 
-                if (current instanceof DividerBlock) {
-                    firstDividerIndex = blockIterator.nextIndex();
+                    if (current instanceof DividerBlock) {
+                        firstDividerIndex = blockIterator.nextIndex();
+                    }
                 }
+
+                newBlocks = oldBlocks.subList(0, firstDividerIndex);
+                if (!newBlocks.isEmpty()) {
+                    if (actions.size() > 0) {
+                        BlockActionPayload.Action action = actions.get(0);
+                        //TODO: handle value of pressed button with action.getValue() to approve / deny the approval
+                        //TODO: need to use methods from mapper to create blocks
+                        newBlocks.add(SectionBlock.builder().text(MarkdownTextObject.builder().text("*" +action.getText().getText() +"*").build()).build());
+                        attachment.setBlocks(newBlocks);
+                    }
+                }
+
             }
 
-            newBlocks = oldBlocks.subList(0, firstDividerIndex);
-            if (!newBlocks.isEmpty()) {
-                if (actions.size() > 0) {
-                    BlockActionPayload.Action action = actions.get(0);
-                    //TODO: handle value of pressed button with action.getValue() to approve / deny the approval
-                    //TODO: need to use methods from mapper to create blocks
-                    newBlocks.add(SectionBlock.builder().text(MarkdownTextObject.builder().text("*" +action.getText().getText() +"*").build()).build());
-                    attachment.setBlocks(newBlocks);
+            ChatUpdateRequest updateRequest = ChatUpdateRequest.builder()
+                    .channel(actionPayload.getChannel().getId())
+                    .ts(actionPayload.getMessage().getTs())
+                    .attachments(attachments)
+                    .build();
+
+            try {
+                ChatUpdateResponse response = slack.methods(token).chatUpdate(updateRequest);
+
+                if (response.isOk()) {
+                    successful = true;
+                } else {
+                    System.err.println("PAYLOAD_ERROR: " +response.getError());
                 }
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (SlackApiException e) {
+                e.printStackTrace();
             }
 
         }
-
-        ChatUpdateRequest updateRequest = ChatUpdateRequest.builder()
-                .channel(payload.getChannel().getId())
-                .ts(payload.getMessage().getTs())
-                .attachments(attachments)
-                .build();
-
-        try {
-            ChatUpdateResponse response = slack.methods(token).chatUpdate(updateRequest);
-
-            if (response.isOk()) {
-                successful = true;
-            } else {
-                System.err.println("PAYLOAD_ERROR: " +response.getError());
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (SlackApiException e) {
-            e.printStackTrace();
-        }
-
 
         return successful;
     }
