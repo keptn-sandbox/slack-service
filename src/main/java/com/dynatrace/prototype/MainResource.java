@@ -65,23 +65,4 @@ public class MainResource {
         return result;
     }
 
-    @POST
-    @Consumes({MediaType.APPLICATION_FORM_URLENCODED})
-    @Path("/slackUserInput")
-    public String handleSlackUserInput(String payload) {
-        JsonPayloadExtractor extractor = new JsonPayloadExtractor();
-        Gson gson = GsonFactory.createSnakeCase();
-
-        try {
-            String jsonPayload = extractor.extractIfExists(payload);
-            BlockActionPayload blockActionPayload = gson.fromJson(jsonPayload, BlockActionPayload.class);
-            //TODO: need to be changed
-            SlackHandler slackHandler = new SlackHandler();
-            slackHandler.sendEvent(blockActionPayload);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
 }
