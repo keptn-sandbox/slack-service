@@ -2,7 +2,9 @@ package com.dynatrace.prototype.payloadHandler;
 
 import com.dynatrace.prototype.domainModel.KeptnCloudEvent;
 import com.dynatrace.prototype.domainModel.KeptnCloudEventDataResult;
+import com.dynatrace.prototype.domainModel.KeptnCloudEventDataState;
 import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventData;
+import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventProblemData;
 import com.dynatrace.prototype.payloadCreator.*;
 import com.slack.api.Slack;
 import com.slack.api.app_backend.interactive_components.payload.BlockActionPayload;
@@ -19,10 +21,7 @@ import com.slack.api.model.block.composition.MarkdownTextObject;
 
 import javax.enterprise.context.ApplicationScoped;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.ListIterator;
+import java.util.*;
 
 @ApplicationScoped
 public class SlackHandler implements KeptnCloudEventHandler {
@@ -122,7 +121,7 @@ public class SlackHandler implements KeptnCloudEventHandler {
                     if (actions.size() > 0) {
                         BlockActionPayload.Action action = actions.get(0);
                         //TODO: handle value of pressed button with action.getValue() to approve / deny the approval
-                        //TODO: need to use methods from mapper to create blocks
+                        //TODO: maybe create own class for creating slack blocks
                         newBlocks.add(SectionBlock.builder().text(MarkdownTextObject.builder().text("*" +action.getText().getText() +"*").build()).build());
                         attachment.setBlocks(newBlocks);
                     }
@@ -171,18 +170,33 @@ public class SlackHandler implements KeptnCloudEventHandler {
         attachment.setBlocks(layoutBlocks);
         attachment.setFallback(fallback);
         if (eventDataObject instanceof KeptnCloudEventData) {
-            KeptnCloudEventDataResult result = ((KeptnCloudEventData) eventDataObject).getResult();
+            KeptnCloudEventData eventData = (KeptnCloudEventData) eventDataObject;
 
-            if (KeptnCloudEventDataResult.PASS.getValue().equals(result.getValue())) {
-                attachment.setColor(COLOR_PASS);
-            } else if (KeptnCloudEventDataResult.WARNING.getValue().equals(result.getValue())) {
-                attachment.setColor(COLOR_WARNING);
-            } else if (KeptnCloudEventDataResult.FAIL.getValue().equals(result.getValue())) {
-                attachment.setColor(COLOR_FAIL);
+            if (eventData.getResult() != null) {
+                attachment.setColor(getEventResultColor(Objects.toString(eventData.getResult())));
+            } else if (eventData instanceof KeptnCloudEventProblemData) {
+                KeptnCloudEventProblemData eventProblemData = (KeptnCloudEventProblemData) eventData;
+                attachment.setColor(getEventResultColor(Objects.toString(eventProblemData.getState())));
             }
         }
         attachments.add(attachment);
 
         return attachments;
+    }
+
+    private String getEventResultColor(String result) {
+        String eventResultColor = null;
+
+        if (result != null) {
+            if (KeptnCloudEventDataResult.PASS.getValue().equals(result) || KeptnCloudEventDataState.RESOLVED.getValue().equals(result)) {
+                eventResultColor = COLOR_PASS;
+            } else if (KeptnCloudEventDataResult.WARNING.getValue().equals(result)) {
+                eventResultColor = COLOR_WARNING;
+            } else if (KeptnCloudEventDataResult.FAIL.getValue().equals(result) || KeptnCloudEventDataState.OPEN.getValue().equals(result)) {
+                eventResultColor = COLOR_FAIL;
+            }
+        }
+
+        return eventResultColor;
     }
 }
