@@ -1,9 +1,11 @@
 package com.dynatrace.prototype.payloadHandler;
 
+import com.dynatrace.prototype.domainModel.KeptnCloudEvent;
+import com.dynatrace.prototype.domainModel.KeptnCloudEventDataResult;
+import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventData;
 import com.dynatrace.prototype.ApprovalService;
 import com.dynatrace.prototype.domainModel.*;
 import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventApprovalData;
-import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventData;
 import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventProblemData;
 import com.dynatrace.prototype.payloadCreator.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -20,7 +22,6 @@ import com.slack.api.model.block.DividerBlock;
 import com.slack.api.model.block.LayoutBlock;
 import com.slack.api.model.block.SectionBlock;
 import com.slack.api.model.block.composition.MarkdownTextObject;
-import com.slack.api.model.block.composition.TextObject;
 import com.slack.api.model.block.element.BlockElement;
 import com.slack.api.model.block.element.ButtonElement;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
@@ -32,6 +33,9 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.zip.DataFormatException;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
 
 @ApplicationScoped
 public class SlackHandler implements KeptnCloudEventHandler {
