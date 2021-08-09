@@ -3,7 +3,6 @@ package com.dynatrace.prototype;
 import com.dynatrace.prototype.domainModel.KeptnCloudEvent;
 import com.dynatrace.prototype.domainModel.KeptnCloudEventParser;
 import com.dynatrace.prototype.payloadHandler.KeptnCloudEventHandler;
-import com.dynatrace.prototype.payloadHandler.SlackHandler;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.gson.Gson;
 import com.slack.api.app_backend.interactive_components.payload.BlockActionPayload;

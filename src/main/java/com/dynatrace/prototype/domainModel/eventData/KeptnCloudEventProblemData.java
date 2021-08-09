@@ -1,5 +1,6 @@
 package com.dynatrace.prototype.domainModel.eventData;
 
+import com.dynatrace.prototype.domainModel.KeptnCloudEventDataState;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.LinkedHashMap;
@@ -9,7 +10,7 @@ public class KeptnCloudEventProblemData extends KeptnCloudEventData {
     public static final String RESOLVED = "RESOLVED";
 
     @JsonProperty(value = "State")
-    private String state;
+    private KeptnCloudEventDataState state;
     @JsonProperty(value = "ProblemID")
     private String problemID;
     @JsonProperty(value = "ProblemTitle")
@@ -25,7 +26,7 @@ public class KeptnCloudEventProblemData extends KeptnCloudEventData {
     @JsonProperty(value = "Tags")
     private String tags;
 
-    public String getState() {
+    public KeptnCloudEventDataState getState() {
         return state;
     }
 

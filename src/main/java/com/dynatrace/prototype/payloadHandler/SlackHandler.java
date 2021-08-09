@@ -2,8 +2,7 @@ package com.dynatrace.prototype.payloadHandler;
 
 import com.dynatrace.prototype.domainModel.KeptnCloudEvent;
 import com.dynatrace.prototype.domainModel.KeptnCloudEventDataResult;
-import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventData;
-import com.dynatrace.prototype.domainModel.KeptnCloudEventDataResult;
+import com.dynatrace.prototype.domainModel.KeptnCloudEventDataState;
 import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventData;
 import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventProblemData;
 import com.dynatrace.prototype.payloadCreator.*;
@@ -22,10 +21,7 @@ import com.slack.api.model.block.composition.MarkdownTextObject;
 
 import javax.enterprise.context.ApplicationScoped;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.ListIterator;
+import java.util.*;
 
 @ApplicationScoped
 public class SlackHandler implements KeptnCloudEventHandler {
@@ -89,70 +85,6 @@ public class SlackHandler implements KeptnCloudEventHandler {
                 System.err.println("EXCEPTION: " +e.getMessage());
                 e.printStackTrace();
             }
-        }
-
-        return successful;
-    }
-
-    public boolean sendEvent(Object payload) {
-        boolean successful = false;
-
-        Slack slack = Slack.getInstance();
-        String token = System.getenv(ENV_SLACK_TOKEN);
-
-        if (payload instanceof BlockActionPayload) {
-            BlockActionPayload actionPayload = (BlockActionPayload) payload;
-            List<Attachment> attachments = actionPayload.getMessage().getAttachments();
-
-            if (attachments.size() > 0) {
-                List<BlockActionPayload.Action> actions = actionPayload.getActions();
-                Attachment attachment = attachments.get(0);
-                List<LayoutBlock> newBlocks;
-                List<LayoutBlock> oldBlocks = attachment.getBlocks();
-                ListIterator<LayoutBlock> blockIterator = oldBlocks.listIterator();
-                int firstDividerIndex = oldBlocks.size();
-
-                while (firstDividerIndex == oldBlocks.size() && blockIterator.hasNext()) {
-                    LayoutBlock current = blockIterator.next();
-
-                    if (current instanceof DividerBlock) {
-                        firstDividerIndex = blockIterator.nextIndex();
-                    }
-                }
-
-                newBlocks = oldBlocks.subList(0, firstDividerIndex);
-                if (!newBlocks.isEmpty()) {
-                    if (actions.size() > 0) {
-                        BlockActionPayload.Action action = actions.get(0);
-                        //TODO: handle value of pressed button with action.getValue() to approve / deny the approval
-                        //TODO: need to use methods from mapper to create blocks
-                        newBlocks.add(SectionBlock.builder().text(MarkdownTextObject.builder().text("*" +action.getText().getText() +"*").build()).build());
-                        attachment.setBlocks(newBlocks);
-                    }
-                }
-
-            }
-
-            ChatUpdateRequest updateRequest = ChatUpdateRequest.builder()
-                    .channel(actionPayload.getChannel().getId())
-                    .ts(actionPayload.getMessage().getTs())
-                    .attachments(attachments)
-                    .build();
-
-            try {
-                ChatUpdateResponse response = slack.methods(token).chatUpdate(updateRequest);
-
-                if (response.isOk()) {
-                    successful = true;
-                } else {
-                    System.err.println("PAYLOAD_ERROR: " +response.getError());
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (SlackApiException e) {
-                e.printStackTrace();
-            }
-
         }
 
         return successful;

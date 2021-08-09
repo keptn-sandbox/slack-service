@@ -31,7 +31,7 @@ public class ProblemMapper extends KeptnCloudEventMapper {
             KeptnCloudEventProblemData eventData = (KeptnCloudEventProblemData) eventDataObject;
             StringBuilder specificDataSB = new StringBuilder();
 
-            specificDataSB.append(ifNotNull("State: ", eventData.getState(), "\n"));
+            specificDataSB.append(ifNotNull("State: ", Objects.toString(eventData.getState()), "\n"));
             specificDataSB.append(ifNotNull("Problem ID: ", eventData.getProblemID(), "\n"));
             specificDataSB.append(ifNotNull("Problem Title: ", eventData.getProblemTitle(), "\n"));
             specificDataSB.append(ifNotNull(null, formatLink(eventData.getProblemURL(), "Problem URL"), "\n"));
