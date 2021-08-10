@@ -7,7 +7,6 @@ import com.dynatrace.prototype.ApprovalService;
 import com.dynatrace.prototype.domainModel.*;
 import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventApprovalData;
 import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventProblemData;
-import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventProblemData;
 import com.dynatrace.prototype.payloadCreator.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.slack.api.Slack;
@@ -180,7 +179,7 @@ public class SlackHandler implements KeptnCloudEventHandler {
                                     eventTriggered.getDatacontenttype(), eventFiniData, eventTriggered.getShkeptncontext(),
                                     eventTriggered.getId(), LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME));
 
-                            //TODO: implement the sending of Approval.finished event
+                            approvalService.sentApprovalFinished(eventFinished);
                         }
                     } catch (JsonProcessingException e) {
                         e.printStackTrace();
