@@ -2,7 +2,6 @@ package com.dynatrace.prototype.payloadHandler;
 
 import com.dynatrace.prototype.domainModel.KeptnCloudEvent;
 import com.dynatrace.prototype.domainModel.KeptnCloudEventDataResult;
-import com.dynatrace.prototype.domainModel.KeptnCloudEventDataState;
 import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventData;
 import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventProblemData;
 import com.dynatrace.prototype.payloadCreator.*;
@@ -176,7 +175,7 @@ public class SlackHandler implements KeptnCloudEventHandler {
                 attachment.setColor(getEventResultColor(Objects.toString(eventData.getResult())));
             } else if (eventData instanceof KeptnCloudEventProblemData) {
                 KeptnCloudEventProblemData eventProblemData = (KeptnCloudEventProblemData) eventData;
-                attachment.setColor(getEventResultColor(Objects.toString(eventProblemData.getState())));
+                attachment.setColor(getEventResultColor(eventProblemData.getState()));
             }
         }
         attachments.add(attachment);
@@ -188,11 +187,11 @@ public class SlackHandler implements KeptnCloudEventHandler {
         String eventResultColor = null;
 
         if (result != null) {
-            if (KeptnCloudEventDataResult.PASS.getValue().equals(result) || KeptnCloudEventDataState.RESOLVED.getValue().equals(result)) {
+            if (KeptnCloudEventDataResult.PASS.getValue().equals(result) || KeptnCloudEventProblemData.RESOLVED.equals(result)) {
                 eventResultColor = COLOR_PASS;
             } else if (KeptnCloudEventDataResult.WARNING.getValue().equals(result)) {
                 eventResultColor = COLOR_WARNING;
-            } else if (KeptnCloudEventDataResult.FAIL.getValue().equals(result) || KeptnCloudEventDataState.OPEN.getValue().equals(result)) {
+            } else if (KeptnCloudEventDataResult.FAIL.getValue().equals(result) || KeptnCloudEventProblemData.OPEN.equals(result)) {
                 eventResultColor = COLOR_FAIL;
             }
         }
