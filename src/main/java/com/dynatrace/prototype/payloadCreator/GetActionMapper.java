@@ -39,8 +39,8 @@ public class GetActionMapper extends KeptnCloudEventMapper {
             specificDataSB.append(ifNotNull("Additional action values: ", Objects.toString(eventData.getAdditionalActionValues()), "\n"));
 
             if (specificDataSB.length() > 0) {
-                layoutBlockList.add(createSlackBlock(SectionBlock.TYPE, specificDataSB.toString()));
-                layoutBlockList.add(createSlackDividerBlock());
+                layoutBlockList.add(SlackCreator.createLayoutBlock(SectionBlock.TYPE, specificDataSB.toString()));
+                layoutBlockList.add(SlackCreator.createDividerBlock());
             }
         } else {
             System.out.println("WARN: eventData is not an instance of KeptnCloudEventActionData although the event type is \"Action / Get-Action\"!");

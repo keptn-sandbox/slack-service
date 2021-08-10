@@ -73,25 +73,31 @@ public class ApprovalMapper extends KeptnCloudEventMapper {
             }
 
             if (message.length() > 0) {
-                layoutBlockList.add(createSlackBlock(SectionBlock.TYPE, message.toString()));
+                layoutBlockList.add(SlackCreator.createLayoutBlock(SectionBlock.TYPE, message.toString()));
                 if (manual) {
                     List<BlockElement> buttons = new ArrayList<>();
-                    ConfirmationDialogObject confirmationApprove = createSlackConfirmationDialog(CONFIRM_TITLE, String.format(CONFIRM_TEXT, APPROVAL_APPROVE_VALUE), CONFIRM_YES, CONFIRM_NO, SLACK_STYLE_PRIMARY);
-                    ConfirmationDialogObject confirmationDeny = createSlackConfirmationDialog(CONFIRM_TITLE, String.format(CONFIRM_TEXT, APPROVAL_DENY_VALUE), CONFIRM_YES, CONFIRM_NO, SLACK_STYLE_DANGER);
+                    ConfirmationDialogObject confirmationApprove = SlackCreator.createConfirmationDialog(CONFIRM_TITLE,
+                            String.format(CONFIRM_TEXT, APPROVAL_APPROVE_VALUE), CONFIRM_YES, CONFIRM_NO,
+                            SlackCreator.SLACK_STYLE_PRIMARY);
+                    ConfirmationDialogObject confirmationDeny = SlackCreator.createConfirmationDialog(CONFIRM_TITLE,
+                            String.format(CONFIRM_TEXT, APPROVAL_DENY_VALUE), CONFIRM_YES, CONFIRM_NO,
+                            SlackCreator.SLACK_STYLE_DANGER);
 
                     try {
                         //TODO: maybe improve how the event is sent to make the payload smaller
                         ObjectMapper mapper = new ObjectMapper();
 
-                        buttons.add(createSlackButton(APPROVAL_APPROVE_ID, APPROVAL_APPROVE_VALUE, mapper.writeValueAsString(event), SLACK_STYLE_PRIMARY, confirmationApprove));
-                        buttons.add(createSlackButton(APPROVAL_DENY_ID, APPROVAL_DENY_VALUE, null, SLACK_STYLE_DANGER, confirmationDeny));
+                        buttons.add(SlackCreator.createButton(APPROVAL_APPROVE_ID, APPROVAL_APPROVE_VALUE,
+                                mapper.writeValueAsString(event), SlackCreator.SLACK_STYLE_PRIMARY, confirmationApprove));
+                        buttons.add(SlackCreator.createButton(APPROVAL_DENY_ID, APPROVAL_DENY_VALUE, null,
+                                SlackCreator.SLACK_STYLE_DANGER, confirmationDeny));
                     } catch (JsonProcessingException e) {
                         e.printStackTrace();
                     }
 
-                    layoutBlockList.add(createSlackBlock(ActionsBlock.TYPE, buttons));
+                    layoutBlockList.add(SlackCreator.createLayoutBlock(ActionsBlock.TYPE, buttons));
                 }
-                layoutBlockList.add(createSlackDividerBlock());
+                layoutBlockList.add(SlackCreator.createDividerBlock());
             }
         } else {
             System.out.println("WARN: eventData is not an instance of KeptnCloudEventApprovalData although the event type is \"Approval\"!");

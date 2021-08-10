@@ -87,7 +87,7 @@ public class SlackHandler implements KeptnCloudEventHandler {
                     layoutBlockList.addAll(mapper.getSpecificData(event));
                 }
 
-                List<Attachment> attachments = createSlackAttachment(event, layoutBlockList, SLACK_NOTIFICATION_MSG);
+                List<Attachment> attachments = SlackCreator.createAttachment(event, layoutBlockList, SLACK_NOTIFICATION_MSG);
                 ChatPostMessageRequest request = ChatPostMessageRequest.builder()
                         .channel(channel)
                         .attachments(attachments)

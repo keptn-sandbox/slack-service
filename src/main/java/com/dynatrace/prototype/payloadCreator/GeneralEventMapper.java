@@ -32,7 +32,7 @@ public class GeneralEventMapper extends KeptnCloudEventMapper {
         eventName = StringUtils.reverse(StringUtils.reverse(eventName).replaceFirst("\\.", " - "));
 
         if (!eventName.isBlank()) {
-            layoutBlockList.add(createSlackBlock(HeaderBlock.TYPE, eventName));
+            layoutBlockList.add(SlackCreator.createLayoutBlock(HeaderBlock.TYPE, eventName));
         }
 
         String keptnBridgeDomain = System.getenv(ENV_KEPTN_BRIDGE_DOMAIN);
@@ -52,8 +52,9 @@ public class GeneralEventMapper extends KeptnCloudEventMapper {
                             .append(event.getShkeptncontext()).append("/event/").append(event.getId());
                 }
 
-                layoutBlockList.add(createSlackBlock(SectionBlock.TYPE, formatLink(eventURLSB.toString(), KEPTN_BRIDGE_NAME)));
-                layoutBlockList.add(createSlackDividerBlock());
+                layoutBlockList.add(SlackCreator.createLayoutBlock(SectionBlock.TYPE, SlackCreator.formatLink(eventURLSB.toString(),
+                        KEPTN_BRIDGE_NAME)));
+                layoutBlockList.add(SlackCreator.createDividerBlock());
             }
         }
 

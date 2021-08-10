@@ -33,8 +33,8 @@ public class GetSLIMapper extends KeptnCloudEventMapper {
             specificDataSB.append(ifNotNull("Sli Provider: ", eventData.getSliProvider(), "\n"));
 
             if (specificDataSB.length() > 0) {
-                layoutBlockList.add(createSlackBlock(SectionBlock.TYPE, specificDataSB.toString()));
-                layoutBlockList.add(createSlackDividerBlock());
+                layoutBlockList.add(SlackCreator.createLayoutBlock(SectionBlock.TYPE, specificDataSB.toString()));
+                layoutBlockList.add(SlackCreator.createDividerBlock());
             }
         } else {
             System.out.println("WARN: eventData is not an instance of KeptnCloudEventGetSLIData although the event type is \"Get-Sli\"!");

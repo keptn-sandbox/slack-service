@@ -31,13 +31,16 @@ public class ReleaseMapper extends KeptnCloudEventMapper {
             KeptnCloudEventReleaseData eventData = (KeptnCloudEventReleaseData) eventDataObject;
             StringBuilder specificDataSB = new StringBuilder();
 
-            specificDataSB.append(ifNotNull(null, formatLink(eventData.getFirstDeploymentURIPublic(), "Public URI"), "\n"));
-            specificDataSB.append(ifNotNull(null, formatLink(eventData.getFirstDeploymentURILocal(), "Local URI"), "\n"));
-            specificDataSB.append(ifNotNull("Deployment names: ", Objects.toString(eventData.getDeploymentNames()), "\n"));
+            specificDataSB.append(ifNotNull(null, SlackCreator.formatLink(eventData.getFirstDeploymentURIPublic(),
+                    "Public URI"), "\n"));
+            specificDataSB.append(ifNotNull(null, SlackCreator.formatLink(eventData.getFirstDeploymentURILocal(),
+                    "Local URI"), "\n"));
+            specificDataSB.append(ifNotNull("Deployment names: ", Objects.toString(eventData.getDeploymentNames()),
+                    "\n"));
 
             if (specificDataSB.length() > 0) {
-                layoutBlockList.add(createSlackBlock(SectionBlock.TYPE, specificDataSB.toString()));
-                layoutBlockList.add(createSlackDividerBlock());
+                layoutBlockList.add(SlackCreator.createLayoutBlock(SectionBlock.TYPE, specificDataSB.toString()));
+                layoutBlockList.add(SlackCreator.createDividerBlock());
             }
         } else {
             System.out.println("WARN: eventData is not an instance of KeptnCloudEventReleaseData although the event type is \"Release\"!");
