@@ -4,6 +4,8 @@ import com.dynatrace.prototype.domainModel.KeptnCloudEvent;
 import com.dynatrace.prototype.domainModel.KeptnCloudEventDataResult;
 import com.dynatrace.prototype.domainModel.KeptnEvent;
 import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventApprovalData;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.slack.api.model.block.ActionsBlock;
 import com.slack.api.model.block.LayoutBlock;
 import com.slack.api.model.block.SectionBlock;
@@ -21,8 +23,10 @@ public class ApprovalMapper extends KeptnCloudEventMapper {
     private static final String CONFIRM_TEXT = "Are you sure that you want to %s it?";
     private static final String CONFIRM_YES = "yes";
     private static final String CONFIRM_NO = "cancel";
-    private static final String APPROVAL_APPROVE = "approve";
-    private static final String APPROVAL_DENY = "deny";
+    public static final String APPROVAL_APPROVE_VALUE = "approve";
+    public static final String APPROVAL_DENY_VALUE = "deny";
+    public static final String APPROVAL_APPROVE_ID = "approve";
+    public static final String APPROVAL_DENY_ID = "deny";
 
     @Override
     public List<LayoutBlock> getSpecificData(KeptnCloudEvent event) {
@@ -72,11 +76,18 @@ public class ApprovalMapper extends KeptnCloudEventMapper {
                 layoutBlockList.add(createSlackBlock(SectionBlock.TYPE, message.toString()));
                 if (manual) {
                     List<BlockElement> buttons = new ArrayList<>();
-                    ConfirmationDialogObject confirmationApprove = createSlackConfirmationDialog(CONFIRM_TITLE, String.format(CONFIRM_TEXT, APPROVAL_APPROVE), CONFIRM_YES, CONFIRM_NO, SLACK_STYLE_PRIMARY);
-                    ConfirmationDialogObject confirmationDeny = createSlackConfirmationDialog(CONFIRM_TITLE, String.format(CONFIRM_TEXT, APPROVAL_DENY), CONFIRM_YES, CONFIRM_NO, SLACK_STYLE_DANGER);
+                    ConfirmationDialogObject confirmationApprove = createSlackConfirmationDialog(CONFIRM_TITLE, String.format(CONFIRM_TEXT, APPROVAL_APPROVE_VALUE), CONFIRM_YES, CONFIRM_NO, SLACK_STYLE_PRIMARY);
+                    ConfirmationDialogObject confirmationDeny = createSlackConfirmationDialog(CONFIRM_TITLE, String.format(CONFIRM_TEXT, APPROVAL_DENY_VALUE), CONFIRM_YES, CONFIRM_NO, SLACK_STYLE_DANGER);
 
-                    buttons.add(createSlackButton(APPROVAL_APPROVE, "yes", SLACK_STYLE_PRIMARY, confirmationApprove));
-                    buttons.add(createSlackButton(APPROVAL_DENY, "no", SLACK_STYLE_DANGER, confirmationDeny));
+                    try {
+                        //TODO: maybe improve how the event is sent to make the payload smaller
+                        ObjectMapper mapper = new ObjectMapper();
+
+                        buttons.add(createSlackButton(APPROVAL_APPROVE_ID, APPROVAL_APPROVE_VALUE, mapper.writeValueAsString(event), SLACK_STYLE_PRIMARY, confirmationApprove));
+                        buttons.add(createSlackButton(APPROVAL_DENY_ID, APPROVAL_DENY_VALUE, null, SLACK_STYLE_DANGER, confirmationDeny));
+                    } catch (JsonProcessingException e) {
+                        e.printStackTrace();
+                    }
 
                     layoutBlockList.add(createSlackBlock(ActionsBlock.TYPE, buttons));
                 }

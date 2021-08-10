@@ -8,6 +8,7 @@ import com.slack.api.model.block.composition.PlainTextObject;
 import com.slack.api.model.block.element.BlockElement;
 import com.slack.api.model.block.element.ButtonElement;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static com.slack.api.model.block.composition.BlockCompositions.markdownText;
@@ -119,8 +120,9 @@ public abstract class KeptnCloudEventMapper {
      * @param buttonConfirmation confirmation to display if the button was clicked
      * @return ButtonElement
      */
-    protected ButtonElement createSlackButton(String text, String value, String style, ConfirmationDialogObject buttonConfirmation) {
+    protected ButtonElement createSlackButton(String id, String text, String value, String style, ConfirmationDialogObject buttonConfirmation) {
         return ButtonElement.builder()
+                .actionId(id +LocalDateTime.now())
                 .text(PlainTextObject.builder().text(text).build())
                 .value(value)
                 .style(style)
