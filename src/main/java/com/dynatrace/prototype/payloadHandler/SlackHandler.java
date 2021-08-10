@@ -1,5 +1,6 @@
 package com.dynatrace.prototype.payloadHandler;
 
+import com.dynatrace.prototype.ApprovalService;
 import com.dynatrace.prototype.domainModel.*;
 import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventApprovalData;
 import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventData;
@@ -22,8 +23,10 @@ import com.slack.api.model.block.SectionBlock;
 import com.slack.api.model.block.composition.MarkdownTextObject;
 import com.slack.api.model.block.element.BlockElement;
 import com.slack.api.model.block.element.ButtonElement;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -39,6 +42,10 @@ public class SlackHandler implements KeptnCloudEventHandler {
     private static final String COLOR_FAIL = "#FF0000";
 
     private LinkedHashSet<KeptnCloudEventMapper> mappers;
+
+    @Inject
+    @RestClient
+    ApprovalService approvalService;
 
     public SlackHandler() {
         this.mappers = new LinkedHashSet<>();
@@ -167,7 +174,7 @@ public class SlackHandler implements KeptnCloudEventHandler {
                                     eventTriggered.getDatacontenttype(), eventFiniData, eventTriggered.getShkeptncontext(),
                                     eventTriggered.getId(), LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME));
 
-                            //TODO: implement the sending of Approval.finished event
+                            approvalService.sentApprovalFinished(eventFinished);
                         }
                     } catch (JsonProcessingException e) {
                         e.printStackTrace();
