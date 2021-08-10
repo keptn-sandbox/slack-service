@@ -126,25 +126,70 @@ public class SlackHandler implements KeptnCloudEventHandler {
                 List<LayoutBlock> oldBlocks = attachment.getBlocks();
                 ListIterator<LayoutBlock> blockIterator = oldBlocks.listIterator();
                 int firstDividerIndex = oldBlocks.size();
+                ActionsBlock firstActionBlock = null;
+                ButtonElement buttonWithEvent = null;
 
-                while (firstDividerIndex == oldBlocks.size() && blockIterator.hasNext()) {
+                while ((firstDividerIndex == oldBlocks.size() || firstActionBlock == null) && blockIterator.hasNext()) {
                     LayoutBlock current = blockIterator.next();
 
                     if (current instanceof DividerBlock) {
                         firstDividerIndex = blockIterator.nextIndex();
+                    } else if (current instanceof ActionsBlock) {
+                        firstActionBlock = (ActionsBlock) current;
+                    }
+                }
+
+                if (firstActionBlock != null && firstActionBlock.getElements() != null) {
+                    Iterator<BlockElement> buttonIterator = firstActionBlock.getElements().iterator();
+
+                    while (buttonWithEvent == null && buttonIterator.hasNext()) {
+                        BlockElement element = buttonIterator.next();
+
+                        if (element instanceof ButtonElement) {
+                            ButtonElement button = (ButtonElement) element;
+
+                            if (button.getActionId().startsWith(ApprovalMapper.APPROVAL_APPROVE_ID)) {
+                                buttonWithEvent = button;
+                            }
+                        }
                     }
                 }
 
                 newBlocks = oldBlocks.subList(0, firstDividerIndex);
-                if (!newBlocks.isEmpty()) {
-                    if (actions.size() > 0) {
-                        BlockActionPayload.Action action = actions.get(0);
-                        //TODO: handle value of pressed button with action.getValue() to approve / deny the approval
-                        //TODO: maybe create own class for creating slack blocks
-                        newBlocks.add(SectionBlock.builder().text(MarkdownTextObject.builder().text("*" +action.getText().getText() +"*").build()).build());
-                        attachment.setBlocks(newBlocks);
+                if (!actions.isEmpty() && buttonWithEvent != null) {
+                    BlockActionPayload.Action action = actions.get(0);
+
+                    try {
+                        KeptnCloudEvent eventTriggered = KeptnCloudEventParser.parseJsonToKeptnCloudEvent(buttonWithEvent.getValue());
+                        Object eventTrigDataObject = eventTriggered.getData();
+
+                        if (eventTrigDataObject instanceof KeptnCloudEventApprovalData) {
+                            KeptnCloudEventApprovalData eventTrigData = (KeptnCloudEventApprovalData) eventTrigDataObject;
+                            KeptnCloudEventDataResult result = KeptnCloudEventDataResult.FAIL;
+
+                            //TODO: maybe create own class for creating slack blocks
+                            if (ApprovalMapper.APPROVAL_APPROVE_VALUE.equals(action.getText().getText())) {
+                                result = KeptnCloudEventDataResult.PASS;
+                            }
+
+                            KeptnCloudEventData eventFiniData = new KeptnCloudEventData(eventTrigData.getProject(),
+                                    eventTrigData.getService(), eventTrigData.getStage(), eventTrigData.getLabels(),
+                                    "", KeptnCloudEventDataStatus.SUCCEEDED, result);
+                            KeptnCloudEvent eventFinished = new KeptnCloudEvent(eventTriggered.getSpecversion(),
+                                    eventTriggered.getSource(), KeptnEvent.APPROVAL_FINISHED.getValue(),
+                                    eventTriggered.getDatacontenttype(), eventFiniData, eventTriggered.getShkeptncontext(),
+                                    eventTriggered.getId(), LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME));
+
+                            //TODO: implement the sending of Approval.finished event
+                        }
+                    } catch (JsonProcessingException e) {
+                        e.printStackTrace();
                     }
+
+                    newBlocks.add(SectionBlock.builder().text(MarkdownTextObject.builder().text("*" + action.getText().getText() + "*").build()).build());
+                    attachment.setBlocks(newBlocks);
                 }
+            }
 
             }
 
