@@ -27,8 +27,6 @@ public class ApprovalMapper extends KeptnCloudEventMapper {
     public static final String APPROVAL_DENY_VALUE = "deny";
     public static final String APPROVAL_APPROVE_ID = "approve";
     public static final String APPROVAL_DENY_ID = "deny";
-    private static final String APPROVAL_APPROVE = "approve";
-    private static final String APPROVAL_DENY = "deny";
 
     @Override
     public List<LayoutBlock> getSpecificData(KeptnCloudEvent event) {
