@@ -8,6 +8,7 @@ import com.dynatrace.prototype.domainModel.SLIEvaluationResult;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 
 public class KeptnCloudEventEvaluationData extends KeptnCloudEventData {
     private static final String EVALUATION_RESULT = "result", EVALUATION_SCORE = "score", EVALUATION_GIT_COMMIT = "gitCommit", EVALUATION_START = "start", EVALUATION_TIME_START = "timeStart", EVALUATION_END = "end", EVALUATION_TIME_END = "timeEnd",
@@ -76,8 +77,8 @@ public class KeptnCloudEventEvaluationData extends KeptnCloudEventData {
                         }
 
                         KeptnCloudEventDataResult status = KeptnCloudEventDataResult.parseResult(indicatorResult.get(SLI_STATUS).toString());
-                        HashSet<KeptnCloudEventSLITarget> passTargets = getSLITargets(indicatorResult, SLI_PASS_TARGETS);
-                        HashSet<KeptnCloudEventSLITarget> warningTargets = getSLITargets(indicatorResult, SLI_WARNING_TARGETS);
+                        LinkedHashSet<KeptnCloudEventSLITarget> passTargets = getSLITargets(indicatorResult, SLI_PASS_TARGETS);
+                        LinkedHashSet<KeptnCloudEventSLITarget> warningTargets = getSLITargets(indicatorResult, SLI_WARNING_TARGETS);
 
                         sliEvaluationResults.add(new SLIEvaluationResult(name, score, value, passTargets, warningTargets, status));
                     } catch (Exception e) {
@@ -93,8 +94,8 @@ public class KeptnCloudEventEvaluationData extends KeptnCloudEventData {
         return sliEvaluationResults;
     }
 
-    private HashSet<KeptnCloudEventSLITarget> getSLITargets(LinkedHashMap<String, ?> indicatorResult, String targetType) {
-        HashSet<KeptnCloudEventSLITarget> sliTargets = null;
+    private LinkedHashSet<KeptnCloudEventSLITarget> getSLITargets(LinkedHashMap<String, ?> indicatorResult, String targetType) {
+        LinkedHashSet<KeptnCloudEventSLITarget> sliTargets = null;
 
         if (indicatorResult != null) {
             Object sliTargetsObject = indicatorResult.get(targetType);
@@ -102,7 +103,7 @@ public class KeptnCloudEventEvaluationData extends KeptnCloudEventData {
             if (sliTargetsObject instanceof ArrayList) {
                 ArrayList<LinkedHashMap<String, ?>> sliTargetsArrayList = (ArrayList<LinkedHashMap<String, ?>>) sliTargetsObject;
 
-                sliTargets = new HashSet<>();
+                sliTargets = new LinkedHashSet<>();
                 for (LinkedHashMap<?,?> element : sliTargetsArrayList) {
                     try {
                         String criteria = element.get(SLI_TARGET_CRITERIA).toString();

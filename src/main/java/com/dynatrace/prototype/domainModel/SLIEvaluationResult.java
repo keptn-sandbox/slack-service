@@ -1,16 +1,16 @@
 package com.dynatrace.prototype.domainModel;
 
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 
 public class SLIEvaluationResult {
     private String displayName;
     private float score;
     private KeptnCloudEventSLIResult value;
-    private HashSet<KeptnCloudEventSLITarget> passTargets; //TODO: maybe LinkedHashSet (Order important?)
-    private HashSet<KeptnCloudEventSLITarget> warningTargets;
+    private LinkedHashSet<KeptnCloudEventSLITarget> passTargets;
+    private LinkedHashSet<KeptnCloudEventSLITarget> warningTargets;
     private KeptnCloudEventDataResult status;
 
-    public SLIEvaluationResult(String displayName, float score, KeptnCloudEventSLIResult value, HashSet<KeptnCloudEventSLITarget> passTargets, HashSet<KeptnCloudEventSLITarget> warningTargets, KeptnCloudEventDataResult status) {
+    public SLIEvaluationResult(String displayName, float score, KeptnCloudEventSLIResult value, LinkedHashSet<KeptnCloudEventSLITarget> passTargets, LinkedHashSet<KeptnCloudEventSLITarget> warningTargets, KeptnCloudEventDataResult status) {
         this.displayName = displayName;
         this.score = score;
         this.value = value;
@@ -31,11 +31,11 @@ public class SLIEvaluationResult {
         return displayName;
     }
 
-    public HashSet<KeptnCloudEventSLITarget> getPassTargets() {
+    public LinkedHashSet<KeptnCloudEventSLITarget> getPassTargets() {
         return passTargets;
     }
 
-    public HashSet<KeptnCloudEventSLITarget> getWarningTargets() {
+    public LinkedHashSet<KeptnCloudEventSLITarget> getWarningTargets() {
         return warningTargets;
     }
 
