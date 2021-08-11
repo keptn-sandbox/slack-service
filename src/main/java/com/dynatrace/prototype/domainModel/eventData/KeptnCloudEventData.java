@@ -17,6 +17,18 @@ public class KeptnCloudEventData {
     private KeptnCloudEventDataStatus status;
     private KeptnCloudEventDataResult result;
 
+    public KeptnCloudEventData() {}
+
+    public KeptnCloudEventData(String project, String service, String stage, LinkedHashMap<String, String> labels, String message, KeptnCloudEventDataStatus status, KeptnCloudEventDataResult result) {
+        this.project = project;
+        this.service = service;
+        this.stage = stage;
+        this.labels = labels;
+        this.message = message;
+        this.status = status;
+        this.result = result;
+    }
+
     public String getProject() {
         return project;
     }

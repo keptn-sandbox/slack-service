@@ -1,5 +1,7 @@
 package com.dynatrace.prototype.domainModel.eventData;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.util.LinkedHashMap;
 
 public class KeptnCloudEventApprovalData extends KeptnCloudEventData {
@@ -10,10 +12,12 @@ public class KeptnCloudEventApprovalData extends KeptnCloudEventData {
         return approval;
     }
 
+    @JsonIgnore
     public String getApprovalPass() {
         return getValueOfLinkedHashMap(approval, APPROVAL_PASS);
     }
 
+    @JsonIgnore
     public String getApprovalWarning() {
         return getValueOfLinkedHashMap(approval, APPROVAL_WARNING);
     }

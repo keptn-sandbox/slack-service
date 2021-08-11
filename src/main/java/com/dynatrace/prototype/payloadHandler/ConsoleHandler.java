@@ -7,9 +7,14 @@ import javax.enterprise.context.ApplicationScoped;
 @ApplicationScoped
 public class ConsoleHandler implements KeptnCloudEventHandler {
     @Override
-    public boolean handleEvent(KeptnCloudEvent event) {
+    public boolean receiveEvent(KeptnCloudEvent event) {
         System.out.println("'" + event +"'");
 
         return true;
+    }
+
+    @Override
+    public boolean sendEvent(Object payload) {
+        return false;
     }
 }

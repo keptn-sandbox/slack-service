@@ -5,6 +5,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.LinkedHashMap;
 
 public class KeptnCloudEventProblemData extends KeptnCloudEventData {
+    public static final String OPEN = "OPEN";
+    public static final String RESOLVED = "RESOLVED";
+
     @JsonProperty(value = "State")
     private String state;
     @JsonProperty(value = "ProblemID")
