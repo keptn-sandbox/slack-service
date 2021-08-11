@@ -8,7 +8,6 @@ import com.slack.api.model.block.SectionBlock;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 public class ProblemMapper extends KeptnCloudEventMapper {
 
