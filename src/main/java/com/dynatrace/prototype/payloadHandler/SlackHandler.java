@@ -1,12 +1,9 @@
 package com.dynatrace.prototype.payloadHandler;
 
-import com.dynatrace.prototype.domainModel.KeptnCloudEvent;
-import com.dynatrace.prototype.domainModel.KeptnCloudEventDataResult;
-import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventData;
 import com.dynatrace.prototype.ApprovalService;
 import com.dynatrace.prototype.domainModel.*;
 import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventApprovalData;
-import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventProblemData;
+import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventData;
 import com.dynatrace.prototype.payloadCreator.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.slack.api.Slack;
@@ -31,9 +28,8 @@ import javax.inject.Inject;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
-import java.util.zip.DataFormatException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 
@@ -116,81 +112,6 @@ public class SlackHandler implements KeptnCloudEventHandler {
 
         if (payload instanceof BlockActionPayload) {
             BlockActionPayload actionPayload = (BlockActionPayload) payload;
-            List<Attachment> attachments = actionPayload.getMessage().getAttachments();
-
-            if (attachments.size() > 0) {
-                List<BlockActionPayload.Action> actions = actionPayload.getActions();
-                Attachment attachment = attachments.get(0);
-                List<LayoutBlock> newBlocks;
-                List<LayoutBlock> oldBlocks = attachment.getBlocks();
-                ListIterator<LayoutBlock> blockIterator = oldBlocks.listIterator();
-                int firstDividerIndex = oldBlocks.size();
-                ActionsBlock firstActionBlock = null;
-                ButtonElement buttonWithEvent = null;
-
-                while ((firstDividerIndex == oldBlocks.size() || firstActionBlock == null) && blockIterator.hasNext()) {
-                    LayoutBlock current = blockIterator.next();
-
-                    if (current instanceof DividerBlock) {
-                        firstDividerIndex = blockIterator.nextIndex();
-                    } else if (current instanceof ActionsBlock) {
-                        firstActionBlock = (ActionsBlock) current;
-                    }
-                }
-
-                if (firstActionBlock != null && firstActionBlock.getElements() != null) {
-                    Iterator<BlockElement> buttonIterator = firstActionBlock.getElements().iterator();
-
-                    while (buttonWithEvent == null && buttonIterator.hasNext()) {
-                        BlockElement element = buttonIterator.next();
-
-                        if (element instanceof ButtonElement) {
-                            ButtonElement button = (ButtonElement) element;
-
-                            if (button.getActionId().startsWith(ApprovalMapper.APPROVAL_APPROVE_ID)) {
-                                buttonWithEvent = button;
-                            }
-                        }
-                    }
-                }
-
-                newBlocks = oldBlocks.subList(0, firstDividerIndex);
-                if (!actions.isEmpty() && buttonWithEvent != null) {
-                    BlockActionPayload.Action action = actions.get(0);
-
-                    try {
-                        KeptnCloudEvent eventTriggered = KeptnCloudEventParser.parseJsonToKeptnCloudEvent(buttonWithEvent.getValue());
-                        Object eventTrigDataObject = eventTriggered.getData();
-
-                        if (eventTrigDataObject instanceof KeptnCloudEventApprovalData) {
-                            KeptnCloudEventApprovalData eventTrigData = (KeptnCloudEventApprovalData) eventTrigDataObject;
-                            KeptnCloudEventDataResult result = KeptnCloudEventDataResult.FAIL;
-
-                            //TODO: maybe create own class for creating slack blocks
-                            if (ApprovalMapper.APPROVAL_APPROVE_VALUE.equals(action.getText().getText())) {
-                                result = KeptnCloudEventDataResult.PASS;
-                            }
-
-                            KeptnCloudEventData eventFiniData = new KeptnCloudEventData(eventTrigData.getProject(),
-                                    eventTrigData.getService(), eventTrigData.getStage(), eventTrigData.getLabels(),
-                                    "", KeptnCloudEventDataStatus.SUCCEEDED, result);
-                            KeptnCloudEvent eventFinished = new KeptnCloudEvent(eventTriggered.getSpecversion(),
-                                    eventTriggered.getSource(), KeptnEvent.APPROVAL_FINISHED.getValue(),
-                                    eventTriggered.getDatacontenttype(), eventFiniData, eventTriggered.getShkeptncontext(),
-                                    eventTriggered.getId(), LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME));
-
-                            approvalService.sentApprovalFinished(eventFinished);
-                        }
-                    } catch (JsonProcessingException e) {
-                        e.printStackTrace();
-                    }
-
-                    newBlocks.add(SectionBlock.builder().text(MarkdownTextObject.builder().text("*" + action.getText().getText() + "*").build()).build());
-                    attachment.setBlocks(newBlocks);
-                }
-            }
-
-            }
 
             ChatUpdateRequest updateRequest = ChatUpdateRequest.builder()
                     .channel(actionPayload.getChannel().getId())
@@ -218,89 +139,11 @@ public class SlackHandler implements KeptnCloudEventHandler {
     }
 
     /**
-     * Creates a list of slack attachments with one attachment with the given list as blocks.
-     * Evaluate the result of the keptn event and changes the color of the attachment accordingly.
+     * Create an attachment list with one attachment.
+     * The blocks of it are the updated slack message blocks.
      *
-     * @param event        Keptn Cloud Event to evaluate the result
-     * @param layoutBlocks that are added to the attachment
-     * @param fallback     of the attachment (e.g. message of notification)
-     * @return List<Attachment> with one attachment is successful or else null
-     */
-    private List<Attachment> createSlackAttachment(KeptnCloudEvent event, List<LayoutBlock> layoutBlocks, String fallback) {
-        List<Attachment> attachments = null;
-
-        if (event != null) {
-            Object eventDataObject = event.getData();
-
-            if (eventDataObject instanceof KeptnCloudEventData) {
-                KeptnCloudEventData eventData = (KeptnCloudEventData) eventDataObject;
-                KeptnCloudEventDataResult eventResult = null;
-
-                if (eventData.getResult() != null) {
-                    eventResult = eventData.getResult();
-                } else if (eventData instanceof KeptnCloudEventProblemData) {
-                    KeptnCloudEventProblemData eventProblemData = (KeptnCloudEventProblemData) eventData;
-                    try {
-                        eventResult = KeptnCloudEventDataResult.parseResult(eventProblemData.getState());
-                    } catch (DataFormatException e) {
-                        e.printStackTrace();
-                    }
-                }
-
-                attachments = createSlackAttachment(eventResult, layoutBlocks, fallback);
-            }
-        }
-
-        return attachments;
-    }
-
-    /**
-     * Creates a list of slack attachments with one attachment with the given list as blocks.
-     * Changes the color of the attachment according to the eventResult.
-     *
-     * @param eventResult  to set the color accordingly
-     * @param layoutBlocks that are added to the attachment
-     * @param fallback     of the attachment (e.g. message of notification)
-     * @return List<Attachment> with one attachment if successful or else null
-     */
-    private List<Attachment> createSlackAttachment(KeptnCloudEventDataResult eventResult, List<LayoutBlock> layoutBlocks, String fallback) {
-        List<Attachment> attachments = null;
-
-        if (eventResult != null && layoutBlocks != null && fallback != null) {
-            Attachment attachment = new Attachment();
-
-            attachment.setColor(getEventResultColor(eventResult));
-            attachment.setBlocks(layoutBlocks);
-            attachment.setFallback(fallback);
-
-            attachments = new ArrayList<>();
-            attachments.add(attachment);
-        }
-
-        return attachments;
-    }
-
-    private String getEventResultColor(KeptnCloudEventDataResult result) {
-        String eventResultColor = null;
-
-        if (result != null) {
-            if (KeptnCloudEventDataResult.PASS.equals(result) || KeptnCloudEventProblemData.RESOLVED.equals(result.getValue())) {
-                eventResultColor = COLOR_PASS;
-            } else if (KeptnCloudEventDataResult.WARNING.equals(result)) {
-                eventResultColor = COLOR_WARNING;
-            } else if (KeptnCloudEventDataResult.FAIL.equals(result) || KeptnCloudEventProblemData.OPEN.equals(result.getValue())) {
-                eventResultColor = COLOR_FAIL;
-            }
-        }
-
-        return eventResultColor;
-    }
-
-    /**
-     * Creates an attac
-     *
-     * @param payload
-     * @return
+     * @param payload of the button click
+     * @return a list with one attachment if successful or else null
      */
     private List<Attachment> createUpdateMessage(BlockActionPayload payload) {
         List<Attachment> attachments = null;
@@ -352,7 +195,7 @@ public class SlackHandler implements KeptnCloudEventHandler {
                 newBlocks.add(SectionBlock.builder().text(MarkdownTextObject.builder().text(updateMsg).build()).build());
             }
 
-            attachments = createSlackAttachment(approvalFinishedResult, newBlocks, "updated message");
+            attachments = SlackCreator.createSlackAttachment(approvalFinishedResult, newBlocks, "updated message");
         }
 
         return attachments;

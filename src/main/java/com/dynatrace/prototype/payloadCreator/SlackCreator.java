@@ -2,7 +2,6 @@ package com.dynatrace.prototype.payloadCreator;
 
 import com.dynatrace.prototype.domainModel.KeptnCloudEvent;
 import com.dynatrace.prototype.domainModel.KeptnCloudEventDataResult;
-import com.dynatrace.prototype.domainModel.KeptnCloudEventDataState;
 import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventData;
 import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventProblemData;
 import com.slack.api.model.Attachment;
@@ -16,7 +15,7 @@ import com.slack.api.model.block.element.ButtonElement;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
+import java.util.zip.DataFormatException;
 
 import static com.slack.api.model.block.composition.BlockCompositions.markdownText;
 
@@ -149,10 +148,14 @@ public class SlackCreator {
             KeptnCloudEventData eventData = (KeptnCloudEventData) eventDataObject;
 
             if (eventData.getResult() != null) {
-                attachment.setColor(getEventResultColor(Objects.toString(eventData.getResult())));
+                attachment.setColor(getEventResultColor(eventData.getResult()));
             } else if (eventData instanceof KeptnCloudEventProblemData) {
                 KeptnCloudEventProblemData eventProblemData = (KeptnCloudEventProblemData) eventData;
-                attachment.setColor(getEventResultColor(Objects.toString(eventProblemData.getState())));
+                try {
+                    attachment.setColor(getEventResultColor(KeptnCloudEventDataResult.parseResult(eventProblemData.getState())));
+                } catch (DataFormatException e) {
+                    e.printStackTrace();
+                }
             }
         }
         attachments.add(attachment);
@@ -160,15 +163,41 @@ public class SlackCreator {
         return attachments;
     }
 
-    private static String getEventResultColor(String result) {
+    /**
+     * Creates a list of slack attachments with one attachment with the given list as blocks.
+     * Changes the color of the attachment according to the eventResult.
+     *
+     * @param eventResult  to set the color accordingly
+     * @param layoutBlocks that are added to the attachment
+     * @param fallback     of the attachment (e.g. message of notification)
+     * @return List<Attachment> with one attachment if successful or else null
+     */
+    public static List<Attachment> createSlackAttachment(KeptnCloudEventDataResult eventResult, List<LayoutBlock> layoutBlocks, String fallback) {
+        List<Attachment> attachments = null;
+
+        if (eventResult != null && layoutBlocks != null && fallback != null) {
+            Attachment attachment = new Attachment();
+
+            attachment.setColor(getEventResultColor(eventResult));
+            attachment.setBlocks(layoutBlocks);
+            attachment.setFallback(fallback);
+
+            attachments = new ArrayList<>();
+            attachments.add(attachment);
+        }
+
+        return attachments;
+    }
+
+    private static String getEventResultColor(KeptnCloudEventDataResult result) {
         String eventResultColor = null;
 
         if (result != null) {
-            if (KeptnCloudEventDataResult.PASS.getValue().equals(result) || KeptnCloudEventDataState.RESOLVED.getValue().equals(result)) {
+            if (KeptnCloudEventDataResult.PASS.equals(result) || KeptnCloudEventProblemData.RESOLVED.equals(result.getValue())) {
                 eventResultColor = COLOR_PASS;
-            } else if (KeptnCloudEventDataResult.WARNING.getValue().equals(result)) {
+            } else if (KeptnCloudEventDataResult.WARNING.equals(result)) {
                 eventResultColor = COLOR_WARNING;
-            } else if (KeptnCloudEventDataResult.FAIL.getValue().equals(result) || KeptnCloudEventDataState.OPEN.getValue().equals(result)) {
+            } else if (KeptnCloudEventDataResult.FAIL.equals(result) || KeptnCloudEventProblemData.OPEN.equals(result.getValue())) {
                 eventResultColor = COLOR_FAIL;
             }
         }
