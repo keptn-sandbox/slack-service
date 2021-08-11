@@ -11,10 +11,27 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 
 public class KeptnCloudEventEvaluationData extends KeptnCloudEventData {
-    private static final String EVALUATION_RESULT = "result", EVALUATION_SCORE = "score", EVALUATION_GIT_COMMIT = "gitCommit", EVALUATION_START = "start", EVALUATION_TIME_START = "timeStart", EVALUATION_END = "end", EVALUATION_TIME_END = "timeEnd",
-            SLI_INDICATOR_RESULT = "indicatorResults", SLI_DISPLAY_NAME = "displayName", SLI_SCORE = "score", SLI_STATUS = "status", SLI_PASS_TARGETS = "passTargets", SLI_WARNING_TARGETS = "warningTargets", SLI_VALUE = "value",
-            SLI_VALUE_VALUE = "value", SLI_VALUE_METRIC = "metric", SLI_VALUE_SUCCESS = "success", SLI_VALUE_MESSAGE = "message",
-            SLI_TARGET_CRITERIA = "criteria", SLI_TARGET_VALUE = "targetValue", SLI_TARGET_VIOLATED = "violated";
+    private static final String EVALUATION_RESULT = "result";
+    private static final String EVALUATION_SCORE = "score";
+    private static final String EVALUATION_GIT_COMMIT = "gitCommit";
+    private static final String EVALUATION_START = "start";
+    private static final String EVALUATION_TIME_START = "timeStart";
+    private static final String EVALUATION_END = "end";
+    private static final String EVALUATION_TIME_END = "timeEnd";
+    private static final String SLI_INDICATOR_RESULT = "indicatorResults";
+    private static final String SLI_DISPLAY_NAME = "displayName";
+    private static final String SLI_SCORE = "score";
+    private static final String SLI_STATUS = "status";
+    private static final String SLI_PASS_TARGETS = "passTargets";
+    private static final String SLI_WARNING_TARGETS = "warningTargets";
+    private static final String SLI_VALUE = "value";
+    private static final String SLI_VALUE_VALUE = "value";
+    private static final String SLI_VALUE_METRIC = "metric";
+    private static final String SLI_VALUE_SUCCESS = "success";
+    private static final String SLI_VALUE_MESSAGE = "message";
+    private static final String SLI_TARGET_CRITERIA = "criteria";
+    private static final String SLI_TARGET_VALUE = "targetValue";
+    private static final String SLI_TARGET_VIOLATED = "violated";
     private LinkedHashMap<String, ?> test;
     private LinkedHashMap<String, ?> deployment;
     private LinkedHashMap<String, ?> evaluation;

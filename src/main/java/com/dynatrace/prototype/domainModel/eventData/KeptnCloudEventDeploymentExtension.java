@@ -5,7 +5,10 @@ import java.util.LinkedHashMap;
 import java.util.Objects;
 
 public class KeptnCloudEventDeploymentExtension extends KeptnCloudEventData {
-    private static final String DEPLOYMENT_URIS_PUBLIC = "deploymentURIsPublic", DEPLOYMENT_URIS_LOCAL = "deploymentURIsLocal", DEPLOYMENT_NAMES = "deploymentNames", DEPLOYMENT_GIT_COMMIT = "gitCommit";
+    private static final String DEPLOYMENT_URIS_PUBLIC = "deploymentURIsPublic";
+    private static final String DEPLOYMENT_URIS_LOCAL = "deploymentURIsLocal";
+    private static final String DEPLOYMENT_NAMES = "deploymentNames";
+    private static final String DEPLOYMENT_GIT_COMMIT = "gitCommit";
     private LinkedHashMap<String, ?> deployment;
 
     public LinkedHashMap<String, ?> getDeployment() {

@@ -3,7 +3,9 @@ package com.dynatrace.prototype.domainModel.eventData;
 import java.util.LinkedHashMap;
 
 public class KeptnCloudEventTestData extends KeptnCloudEventDeploymentExtension {
-    private static final String TEST_START = "start", TEST_END = "end", TEST_GIT_COMMIT = "gitCommit";
+    private static final String TEST_START = "start";
+    private static final String TEST_END = "end";
+    private static final String TEST_GIT_COMMIT = "gitCommit";
     private LinkedHashMap<String, ?> test;
 
     public LinkedHashMap<String, ?> getTest() {

@@ -3,7 +3,11 @@ package com.dynatrace.prototype.domainModel.eventData;
 import java.util.LinkedHashMap;
 
 public class KeptnCloudEventActionData extends KeptnCloudEventData {
-    private static final String PROBLEM_TITLE = "problemTitle", PROBLEM_ROOT_CAUSE = "rootCause", ACTION_NAME = "name", ACTION = "action", ACTION_DESCRIPTION = "description";
+    private static final String PROBLEM_TITLE = "problemTitle";
+    private static final String PROBLEM_ROOT_CAUSE = "rootCause";
+    private static final String ACTION_NAME = "name";
+    private static final String ACTION = "action";
+    private static final String ACTION_DESCRIPTION = "description";
     private LinkedHashMap<String, ?> problem;
     private LinkedHashMap<String, ?> action;
     private int actionIndex;
