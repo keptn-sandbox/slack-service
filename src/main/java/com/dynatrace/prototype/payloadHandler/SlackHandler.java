@@ -1,24 +1,35 @@
 package com.dynatrace.prototype.payloadHandler;
 
 import com.dynatrace.prototype.domainModel.KeptnCloudEvent;
+import com.dynatrace.prototype.domainModel.KeptnCloudEventDataResult;
+import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventData;
+import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventProblemData;
 import com.dynatrace.prototype.payloadCreator.*;
 import com.slack.api.Slack;
+import com.slack.api.app_backend.interactive_components.payload.BlockActionPayload;
 import com.slack.api.methods.SlackApiException;
 import com.slack.api.methods.request.chat.ChatPostMessageRequest;
+import com.slack.api.methods.request.chat.ChatUpdateRequest;
 import com.slack.api.methods.response.chat.ChatPostMessageResponse;
+import com.slack.api.methods.response.chat.ChatUpdateResponse;
+import com.slack.api.model.Attachment;
+import com.slack.api.model.block.DividerBlock;
 import com.slack.api.model.block.LayoutBlock;
+import com.slack.api.model.block.SectionBlock;
+import com.slack.api.model.block.composition.MarkdownTextObject;
 
 import javax.enterprise.context.ApplicationScoped;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
+import java.util.*;
 
 @ApplicationScoped
 public class SlackHandler implements KeptnCloudEventHandler {
     private static final String ENV_SLACK_TOKEN = "SLACK_TOKEN";
     private static final String ENV_SLACK_CHANNEL = "SLACK_CHANNEL";
     private static final String SLACK_NOTIFICATION_MSG = "A new Keptn Event arrived.";
+    private static final String COLOR_PASS = "#00FF00";
+    private static final String COLOR_WARNING = "#FFFF00";
+    private static final String COLOR_FAIL = "#FF0000";
 
     private LinkedHashSet<KeptnCloudEventMapper> mappers;
 
@@ -39,7 +50,7 @@ public class SlackHandler implements KeptnCloudEventHandler {
     }
 
     @Override
-    public boolean handleEvent(KeptnCloudEvent event) {
+    public boolean receiveEvent(KeptnCloudEvent event) {
         boolean successful = false;
         Slack slack = Slack.getInstance();
         String token = System.getenv(ENV_SLACK_TOKEN);
@@ -57,10 +68,10 @@ public class SlackHandler implements KeptnCloudEventHandler {
                     layoutBlockList.addAll(mapper.getSpecificData(event));
                 }
 
+                List<Attachment> attachments = createSlackAttachment(event, layoutBlockList, SLACK_NOTIFICATION_MSG);
                 ChatPostMessageRequest request = ChatPostMessageRequest.builder()
                         .channel(channel)
-                        .text(SLACK_NOTIFICATION_MSG)
-                        .blocks(layoutBlockList)
+                        .attachments(attachments)
                         .build();
                 ChatPostMessageResponse response = slack.methods(token).chatPostMessage(request);
 
@@ -76,5 +87,115 @@ public class SlackHandler implements KeptnCloudEventHandler {
         }
 
         return successful;
+    }
+
+    public boolean sendEvent(Object payload) {
+        boolean successful = false;
+
+        Slack slack = Slack.getInstance();
+        String token = System.getenv(ENV_SLACK_TOKEN);
+
+        if (payload instanceof BlockActionPayload) {
+            BlockActionPayload actionPayload = (BlockActionPayload) payload;
+            List<Attachment> attachments = actionPayload.getMessage().getAttachments();
+
+            if (attachments.size() > 0) {
+                List<BlockActionPayload.Action> actions = actionPayload.getActions();
+                Attachment attachment = attachments.get(0);
+                List<LayoutBlock> newBlocks;
+                List<LayoutBlock> oldBlocks = attachment.getBlocks();
+                ListIterator<LayoutBlock> blockIterator = oldBlocks.listIterator();
+                int firstDividerIndex = oldBlocks.size();
+
+                while (firstDividerIndex == oldBlocks.size() && blockIterator.hasNext()) {
+                    LayoutBlock current = blockIterator.next();
+
+                    if (current instanceof DividerBlock) {
+                        firstDividerIndex = blockIterator.nextIndex();
+                    }
+                }
+
+                newBlocks = oldBlocks.subList(0, firstDividerIndex);
+                if (!newBlocks.isEmpty()) {
+                    if (actions.size() > 0) {
+                        BlockActionPayload.Action action = actions.get(0);
+                        //TODO: handle value of pressed button with action.getValue() to approve / deny the approval
+                        //TODO: maybe create own class for creating slack blocks
+                        newBlocks.add(SectionBlock.builder().text(MarkdownTextObject.builder().text("*" +action.getText().getText() +"*").build()).build());
+                        attachment.setBlocks(newBlocks);
+                    }
+                }
+
+            }
+
+            ChatUpdateRequest updateRequest = ChatUpdateRequest.builder()
+                    .channel(actionPayload.getChannel().getId())
+                    .ts(actionPayload.getMessage().getTs())
+                    .attachments(attachments)
+                    .build();
+
+            try {
+                ChatUpdateResponse response = slack.methods(token).chatUpdate(updateRequest);
+
+                if (response.isOk()) {
+                    successful = true;
+                } else {
+                    System.err.println("PAYLOAD_ERROR: " +response.getError());
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (SlackApiException e) {
+                e.printStackTrace();
+            }
+
+        }
+
+        return successful;
+    }
+
+    /**
+     * Creates a list of slack attachments with one attachment with the given list as blocks.
+     * Evaluate the result of the keptn event and changes the color of the attachment accordingly.
+     * @param event Keptn Cloud Event to evaluate the result
+     * @param layoutBlocks that are added to the attachment
+     * @param fallback of the attachment (e.g. message of notification)
+     * @return List<Attachment> with one attachment
+     */
+    private List<Attachment> createSlackAttachment(KeptnCloudEvent event, List<LayoutBlock> layoutBlocks, String fallback) {
+        List<Attachment> attachments = new ArrayList<>();
+        Attachment attachment = new Attachment();
+        Object eventDataObject = event.getData();
+
+        attachment.setBlocks(layoutBlocks);
+        attachment.setFallback(fallback);
+        if (eventDataObject instanceof KeptnCloudEventData) {
+            KeptnCloudEventData eventData = (KeptnCloudEventData) eventDataObject;
+
+            if (eventData.getResult() != null) {
+                attachment.setColor(getEventResultColor(Objects.toString(eventData.getResult())));
+            } else if (eventData instanceof KeptnCloudEventProblemData) {
+                KeptnCloudEventProblemData eventProblemData = (KeptnCloudEventProblemData) eventData;
+                attachment.setColor(getEventResultColor(eventProblemData.getState()));
+            }
+        }
+        attachments.add(attachment);
+
+        return attachments;
+    }
+
+    private String getEventResultColor(String result) {
+        String eventResultColor = null;
+
+        if (result != null) {
+            if (KeptnCloudEventDataResult.PASS.getValue().equals(result) || KeptnCloudEventProblemData.RESOLVED.equals(result)) {
+                eventResultColor = COLOR_PASS;
+            } else if (KeptnCloudEventDataResult.WARNING.getValue().equals(result)) {
+                eventResultColor = COLOR_WARNING;
+            } else if (KeptnCloudEventDataResult.FAIL.getValue().equals(result) || KeptnCloudEventProblemData.OPEN.equals(result)) {
+                eventResultColor = COLOR_FAIL;
+            }
+        }
+
+        return eventResultColor;
     }
 }

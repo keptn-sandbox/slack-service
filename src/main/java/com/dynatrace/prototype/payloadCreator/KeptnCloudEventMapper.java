@@ -2,13 +2,20 @@ package com.dynatrace.prototype.payloadCreator;
 
 import com.dynatrace.prototype.domainModel.KeptnCloudEvent;
 import com.slack.api.model.block.*;
+import com.slack.api.model.block.composition.ConfirmationDialogObject;
+import com.slack.api.model.block.composition.MarkdownTextObject;
 import com.slack.api.model.block.composition.PlainTextObject;
+import com.slack.api.model.block.element.BlockElement;
+import com.slack.api.model.block.element.ButtonElement;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static com.slack.api.model.block.composition.BlockCompositions.markdownText;
 
 public abstract class KeptnCloudEventMapper {
+    protected static final String SLACK_STYLE_PRIMARY = "primary";
+    protected static final String SLACK_STYLE_DANGER = "danger";
 
     /**
      * Returns the specific (relevant / important) data of the given KeptnCloudEvent in a list of LayoutBlock(s).
@@ -59,28 +66,6 @@ public abstract class KeptnCloudEventMapper {
     }
 
     /**
-     * This method creates a slack block with the given type (if such a block exists).
-     * Payload is the text of the block  if it needs one else it will be ignored.
-     * @param type of the text (e.g. SectionBlock.TYPE). supported are: SectionBlock, HeaderBlock, DividerBlock
-     * @param payload the text if the slack block requires a text
-     * @return LayoutBlock or null
-     */
-    protected LayoutBlock createSlackBlock(String type, String payload) {
-        LayoutBlock slackBlock = null;
-
-        if (SectionBlock.TYPE.equals(type)) {
-            slackBlock = Blocks.section(section -> section.text(markdownText(payload)));
-        } else if (HeaderBlock.TYPE.equals(type)) {
-            slackBlock = HeaderBlock.builder().text(PlainTextObject.builder().text(payload).build()).build();
-        } else if (DividerBlock.TYPE.equals(type)) {
-            slackBlock = DividerBlock.builder().build();
-        }
-        //TODO: maybe add an ActionBlock (if needed)
-
-        return slackBlock;
-    }
-
-    /**
      * This method creates a slack divider block.
      * Returns the slack divider block if successful or else null.
      * @return DividerBlock or null
@@ -88,4 +73,81 @@ public abstract class KeptnCloudEventMapper {
     protected LayoutBlock createSlackDividerBlock() {
         return createSlackBlock(DividerBlock.TYPE, null);
     }
+
+    /**
+     * This method creates a slack block with the given type (if such a block exists).
+     * Payload is the text of the block if it needs one else it will be ignored.
+     * @param type of the text (e.g. SectionBlock.TYPE).
+     *       supported are:
+     *          SectionBlock (payload:String),
+     *          HeaderBlock (payload:String),
+     *          DividerBlock (payload:null),
+     *          ActionBlock (payload:List<BlockElement>)
+     * @param payload an object representing the text if the slack block requires a text or a list of BlockElements for the ActionBlock
+     * @return LayoutBlock or null
+     */
+    protected LayoutBlock createSlackBlock(String type, Object payload) {
+        LayoutBlock slackBlock = null;
+
+        if (SectionBlock.TYPE.equals(type)) {
+            if (payload instanceof String) {
+                String message = payload.toString();
+                slackBlock = Blocks.section(section -> section.text(markdownText(message)));
+            }
+        } else if (HeaderBlock.TYPE.equals(type)) {
+            if (payload instanceof String) {
+                String message = payload.toString();
+                slackBlock = HeaderBlock.builder().text(PlainTextObject.builder().text(message).build()).build();
+            }
+        } else if (DividerBlock.TYPE.equals(type)) {
+            slackBlock = DividerBlock.builder().build();
+        } else if (ActionsBlock.TYPE.equals(type)) {
+            if (payload instanceof List<?>) {
+                List<BlockElement> elementsList = (List<BlockElement>) payload;
+                slackBlock = ActionsBlock.builder().elements(elementsList).build();
+            }
+        }
+
+        return slackBlock;
+    }
+
+    /**
+     * Creates a slack button with the given parameters.
+     * Returns the object or throws an exception if something failed.
+     * @param text of the button that will be displayed
+     * @param value which the button will send
+     * @param style of the button: 'primary' or 'danger'
+     * @param buttonConfirmation confirmation to display if the button was clicked
+     * @return ButtonElement
+     */
+    protected ButtonElement createSlackButton(String id, String text, String value, String style, ConfirmationDialogObject buttonConfirmation) {
+        return ButtonElement.builder()
+                .actionId(id +LocalDateTime.now())
+                .text(PlainTextObject.builder().text(text).build())
+                .value(value)
+                .style(style)
+                .confirm(buttonConfirmation)
+                .build();
+    }
+
+    /**
+     * Creates a slack confirmation dialog with the given parameters.
+     * Returns the object or throws an exception if something failed.
+     * @param title to display of the confirmation. plain_text
+     * @param text to display of the confirmation. markdown_text
+     * @param confirm text of confirm button. plain_text
+     * @param deny text of deny button. plain_text
+     * @param style of the confirm button: 'primary' or 'danger'
+     * @return ConfirmationDialogObject
+     */
+    protected ConfirmationDialogObject createSlackConfirmationDialog(String title, String text, String confirm, String  deny, String style) {
+        return ConfirmationDialogObject.builder()
+                .title(PlainTextObject.builder().text(title).build())
+                .text(MarkdownTextObject.builder().text(text).build())
+                .confirm(PlainTextObject.builder().text(confirm).build())
+                .deny(PlainTextObject.builder().text(deny).build())
+                .style(style)
+                .build();
+    }
+
 }
