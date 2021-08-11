@@ -5,7 +5,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.LinkedHashMap;
 
 public class KeptnCloudEventApprovalData extends KeptnCloudEventData {
-    private static final String APPROVAL_PASS = "pass", APPROVAL_WARNING = "warning";
+    private static final String APPROVAL_PASS = "pass";
+    private static final String APPROVAL_WARNING = "warning";
+    public static final String APPROVAL_UPDATE_MSG = "%s the approval!";
     private LinkedHashMap<String, ?> approval;
 
     public LinkedHashMap<String, ?> getApproval() {

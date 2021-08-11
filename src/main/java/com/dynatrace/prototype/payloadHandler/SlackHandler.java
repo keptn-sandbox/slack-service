@@ -20,6 +20,7 @@ import com.slack.api.model.block.DividerBlock;
 import com.slack.api.model.block.LayoutBlock;
 import com.slack.api.model.block.SectionBlock;
 import com.slack.api.model.block.composition.MarkdownTextObject;
+import com.slack.api.model.block.composition.TextObject;
 import com.slack.api.model.block.element.BlockElement;
 import com.slack.api.model.block.element.ButtonElement;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
@@ -30,6 +31,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.zip.DataFormatException;
 
 @ApplicationScoped
 public class SlackHandler implements KeptnCloudEventHandler {
@@ -110,84 +112,11 @@ public class SlackHandler implements KeptnCloudEventHandler {
 
         if (payload instanceof BlockActionPayload) {
             BlockActionPayload actionPayload = (BlockActionPayload) payload;
-            List<Attachment> attachments = actionPayload.getMessage().getAttachments();
-
-            if (attachments.size() > 0) {
-                List<BlockActionPayload.Action> actions = actionPayload.getActions();
-                Attachment attachment = attachments.get(0);
-                List<LayoutBlock> newBlocks;
-                List<LayoutBlock> oldBlocks = attachment.getBlocks();
-                ListIterator<LayoutBlock> blockIterator = oldBlocks.listIterator();
-                int firstDividerIndex = oldBlocks.size();
-                ActionsBlock firstActionBlock = null;
-                ButtonElement buttonWithEvent = null;
-
-                while ((firstDividerIndex == oldBlocks.size() || firstActionBlock == null) && blockIterator.hasNext()) {
-                    LayoutBlock current = blockIterator.next();
-
-                    if (current instanceof DividerBlock) {
-                        firstDividerIndex = blockIterator.nextIndex();
-                    } else if (current instanceof ActionsBlock) {
-                        firstActionBlock = (ActionsBlock) current;
-                    }
-                }
-
-                if (firstActionBlock != null && firstActionBlock.getElements() != null) {
-                    Iterator<BlockElement> buttonIterator = firstActionBlock.getElements().iterator();
-
-                    while (buttonWithEvent == null && buttonIterator.hasNext()) {
-                        BlockElement element = buttonIterator.next();
-
-                        if (element instanceof ButtonElement) {
-                            ButtonElement button = (ButtonElement) element;
-
-                            if (button.getActionId().startsWith(ApprovalMapper.APPROVAL_APPROVE_ID)) {
-                                buttonWithEvent = button;
-                            }
-                        }
-                    }
-                }
-
-                newBlocks = oldBlocks.subList(0, firstDividerIndex);
-                if (!actions.isEmpty() && buttonWithEvent != null) {
-                    BlockActionPayload.Action action = actions.get(0);
-
-                    try {
-                        KeptnCloudEvent eventTriggered = KeptnCloudEventParser.parseJsonToKeptnCloudEvent(buttonWithEvent.getValue());
-                        Object eventTrigDataObject = eventTriggered.getData();
-
-                        if (eventTrigDataObject instanceof KeptnCloudEventApprovalData) {
-                            KeptnCloudEventApprovalData eventTrigData = (KeptnCloudEventApprovalData) eventTrigDataObject;
-                            KeptnCloudEventDataResult result = KeptnCloudEventDataResult.FAIL;
-
-                            //TODO: maybe create own class for creating slack blocks
-                            if (ApprovalMapper.APPROVAL_APPROVE_VALUE.equals(action.getText().getText())) {
-                                result = KeptnCloudEventDataResult.PASS;
-                            }
-
-                            KeptnCloudEventData eventFiniData = new KeptnCloudEventData(eventTrigData.getProject(),
-                                    eventTrigData.getService(), eventTrigData.getStage(), eventTrigData.getLabels(),
-                                    "", KeptnCloudEventDataStatus.SUCCEEDED, result);
-                            KeptnCloudEvent eventFinished = new KeptnCloudEvent(eventTriggered.getSpecversion(),
-                                    eventTriggered.getSource(), KeptnEvent.APPROVAL_FINISHED.getValue(),
-                                    eventTriggered.getDatacontenttype(), eventFiniData, eventTriggered.getShkeptncontext(),
-                                    eventTriggered.getId(), LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME));
-
-                            approvalService.sentApprovalFinished(eventFinished);
-                        }
-                    } catch (JsonProcessingException e) {
-                        e.printStackTrace();
-                    }
-
-                    newBlocks.add(SectionBlock.builder().text(MarkdownTextObject.builder().text("*" + action.getText().getText() + "*").build()).build());
-                    attachment.setBlocks(newBlocks);
-                }
-            }
 
             ChatUpdateRequest updateRequest = ChatUpdateRequest.builder()
                     .channel(actionPayload.getChannel().getId())
                     .ts(actionPayload.getMessage().getTs())
-                    .attachments(attachments)
+                    .attachments(createUpdateMessage(actionPayload))
                     .build();
 
             try {
@@ -216,43 +145,207 @@ public class SlackHandler implements KeptnCloudEventHandler {
      * @param event        Keptn Cloud Event to evaluate the result
      * @param layoutBlocks that are added to the attachment
      * @param fallback     of the attachment (e.g. message of notification)
-     * @return List<Attachment> with one attachment
+     * @return List<Attachment> with one attachment is successful or else null
      */
     private List<Attachment> createSlackAttachment(KeptnCloudEvent event, List<LayoutBlock> layoutBlocks, String fallback) {
-        List<Attachment> attachments = new ArrayList<>();
-        Attachment attachment = new Attachment();
-        Object eventDataObject = event.getData();
+        List<Attachment> attachments = null;
 
-        attachment.setBlocks(layoutBlocks);
-        attachment.setFallback(fallback);
-        if (eventDataObject instanceof KeptnCloudEventData) {
-            KeptnCloudEventData eventData = (KeptnCloudEventData) eventDataObject;
+        if (event != null) {
+            Object eventDataObject = event.getData();
 
-            if (eventData.getResult() != null) {
-                attachment.setColor(getEventResultColor(Objects.toString(eventData.getResult())));
-            } else if (eventData instanceof KeptnCloudEventProblemData) {
-                KeptnCloudEventProblemData eventProblemData = (KeptnCloudEventProblemData) eventData;
-                attachment.setColor(getEventResultColor(eventProblemData.getState()));
+            if (eventDataObject instanceof KeptnCloudEventData) {
+                KeptnCloudEventData eventData = (KeptnCloudEventData) eventDataObject;
+                KeptnCloudEventDataResult eventResult = null;
+
+                if (eventData.getResult() != null) {
+                    eventResult = eventData.getResult();
+                } else if (eventData instanceof KeptnCloudEventProblemData) {
+                    KeptnCloudEventProblemData eventProblemData = (KeptnCloudEventProblemData) eventData;
+                    try {
+                        eventResult = KeptnCloudEventDataResult.parseResult(eventProblemData.getState());
+                    } catch (DataFormatException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                attachments = createSlackAttachment(eventResult, layoutBlocks, fallback);
             }
         }
-        attachments.add(attachment);
 
         return attachments;
     }
 
-    private String getEventResultColor(String result) {
+    /**
+     * Creates a list of slack attachments with one attachment with the given list as blocks.
+     * Changes the color of the attachment according to the eventResult.
+     *
+     * @param eventResult  to set the color accordingly
+     * @param layoutBlocks that are added to the attachment
+     * @param fallback     of the attachment (e.g. message of notification)
+     * @return List<Attachment> with one attachment if successful or else null
+     */
+    private List<Attachment> createSlackAttachment(KeptnCloudEventDataResult eventResult, List<LayoutBlock> layoutBlocks, String fallback) {
+        List<Attachment> attachments = null;
+
+        if (eventResult != null && layoutBlocks != null && fallback != null) {
+            Attachment attachment = new Attachment();
+
+            attachment.setColor(getEventResultColor(eventResult));
+            attachment.setBlocks(layoutBlocks);
+            attachment.setFallback(fallback);
+
+            attachments = new ArrayList<>();
+            attachments.add(attachment);
+        }
+
+        return attachments;
+    }
+
+    private String getEventResultColor(KeptnCloudEventDataResult result) {
         String eventResultColor = null;
 
         if (result != null) {
-            if (KeptnCloudEventDataResult.PASS.getValue().equals(result) || KeptnCloudEventProblemData.RESOLVED.equals(result)) {
+            if (KeptnCloudEventDataResult.PASS.equals(result) || KeptnCloudEventProblemData.RESOLVED.equals(result.getValue())) {
                 eventResultColor = COLOR_PASS;
-            } else if (KeptnCloudEventDataResult.WARNING.getValue().equals(result)) {
+            } else if (KeptnCloudEventDataResult.WARNING.equals(result)) {
                 eventResultColor = COLOR_WARNING;
-            } else if (KeptnCloudEventDataResult.FAIL.getValue().equals(result) || KeptnCloudEventProblemData.OPEN.equals(result)) {
+            } else if (KeptnCloudEventDataResult.FAIL.equals(result) || KeptnCloudEventProblemData.OPEN.equals(result.getValue())) {
                 eventResultColor = COLOR_FAIL;
             }
         }
 
         return eventResultColor;
     }
+
+    /**
+     * Creates an attac
+     *
+     * @param payload
+     * @return
+     */
+    private List<Attachment> createUpdateMessage(BlockActionPayload payload) {
+        List<Attachment> attachments = null;
+
+        if (payload.getMessage() != null && payload.getMessage().getAttachments() != null) {
+            Attachment firstAttachment = payload.getMessage().getAttachments().get(0);
+            List<LayoutBlock> newBlocks = new ArrayList<>();
+            KeptnCloudEventDataResult approvalFinishedResult = null;
+            KeptnCloudEvent approvalTriggered = null;
+
+            if (firstAttachment != null && firstAttachment.getBlocks() != null) {
+                Iterator<LayoutBlock> oldBlocksIterator = firstAttachment.getBlocks().iterator();
+                boolean foundDivider = false;
+                ActionsBlock firstActions = null; //The action containing a button with the Keptn event as value
+
+                while (!(foundDivider && firstActions != null) && oldBlocksIterator.hasNext()) {
+                    LayoutBlock current = oldBlocksIterator.next();
+
+                    if (!foundDivider) {
+                        newBlocks.add(current);
+                        if (current instanceof DividerBlock) {
+                            foundDivider = true;
+                        }
+                    }
+
+                    if (firstActions == null && current instanceof ActionsBlock) {
+                        firstActions = (ActionsBlock) current;
+                    }
+                }
+
+                approvalTriggered = extractKeptnCloudEvent(firstActions);
+            }
+
+            if (payload.getActions() != null) {
+                BlockActionPayload.Action buttonAction = payload.getActions().get(0);
+                String updateMsg = null;
+
+                if (buttonAction.getValue() != null) {
+                    updateMsg = String.format(KeptnCloudEventApprovalData.APPROVAL_UPDATE_MSG, "*Approved*");
+                    approvalFinishedResult = KeptnCloudEventDataResult.PASS;
+                } else {
+                    updateMsg = String.format(KeptnCloudEventApprovalData.APPROVAL_UPDATE_MSG, "*Denied*");
+                    approvalFinishedResult = KeptnCloudEventDataResult.FAIL;
+                }
+
+                //TODO: only continue if this was successful?
+                sendKeptnApprovalFinished(approvalTriggered, approvalFinishedResult);
+
+                newBlocks.add(SectionBlock.builder().text(MarkdownTextObject.builder().text(updateMsg).build()).build());
+            }
+
+            attachments = createSlackAttachment(approvalFinishedResult, newBlocks, "updated message");
+        }
+
+        return attachments;
+    }
+
+    /**
+     * Extracts the KeptnCloudEvent out of the actionsBlock.
+     * The actionsBlock must have a button with an actionId starting with the value of ApprovalMapper.APPROVAL_APPROVE_ID.
+     *
+     * @param actionsBlock to extract the event of
+     * @return the KeptnCloudEvent if successful or else null
+     */
+    private KeptnCloudEvent extractKeptnCloudEvent(ActionsBlock actionsBlock) {
+        KeptnCloudEvent result = null;
+        ButtonElement eventButton = null;
+
+        if (actionsBlock != null && actionsBlock.getElements() != null) {
+            Iterator<BlockElement> blockIterator = actionsBlock.getElements().iterator();
+
+            while (eventButton == null && blockIterator.hasNext()) {
+                BlockElement element = blockIterator.next();
+
+                if (element instanceof ButtonElement) {
+                    ButtonElement button = (ButtonElement) element;
+
+                    if (button.getActionId().startsWith(ApprovalMapper.APPROVAL_APPROVE_ID)) {
+                        eventButton = button;
+                    }
+                }
+            }
+
+            if (eventButton != null) {
+                try {
+                    result = KeptnCloudEventParser.parseJsonToKeptnCloudEvent(eventButton.getValue());
+                } catch (JsonProcessingException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Creates an approval.finished event out of a given approval.triggered event.
+     * The result of the .finished event is the given result.
+     *
+     * @param approvalTriggered out of which the approval.finished is created
+     * @param approvalResult    of the approval.finished event
+     */
+    private void sendKeptnApprovalFinished(KeptnCloudEvent approvalTriggered, KeptnCloudEventDataResult approvalResult) {
+        //boolean successful = false;
+
+        if (approvalTriggered != null && approvalResult != null) {
+            Object approvalTriggeredDataObject = approvalTriggered.getData();
+
+            if (approvalTriggeredDataObject instanceof KeptnCloudEventApprovalData) {
+                KeptnCloudEventApprovalData approvalTriggeredData = (KeptnCloudEventApprovalData) approvalTriggeredDataObject;
+
+                KeptnCloudEventData approvalFinishedData = new KeptnCloudEventData(approvalTriggeredData.getProject(),
+                        approvalTriggeredData.getService(), approvalTriggeredData.getStage(), approvalTriggeredData.getLabels(),
+                        "", KeptnCloudEventDataStatus.SUCCEEDED, approvalResult);
+
+                KeptnCloudEvent eventFinished = new KeptnCloudEvent(approvalTriggered.getSpecversion(),
+                        approvalTriggered.getSource(), KeptnEvent.APPROVAL_FINISHED.getValue(),
+                        approvalTriggered.getDatacontenttype(), approvalFinishedData, approvalTriggered.getShkeptncontext(),
+                        approvalTriggered.getId(), LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME));
+
+                approvalService.sentApprovalFinished(eventFinished);
+            }
+        }
+
+    }
+
 }
