@@ -148,14 +148,10 @@ public class SlackCreator {
             KeptnCloudEventData eventData = (KeptnCloudEventData) eventDataObject;
 
             if (eventData.getResult() != null) {
-                attachment.setColor(getEventResultColor(eventData.getResult()));
+                attachment.setColor(getEventResultColor(eventData.getResult().getValue()));
             } else if (eventData instanceof KeptnCloudEventProblemData) {
                 KeptnCloudEventProblemData eventProblemData = (KeptnCloudEventProblemData) eventData;
-                try {
-                    attachment.setColor(getEventResultColor(KeptnCloudEventDataResult.parseResult(eventProblemData.getState())));
-                } catch (DataFormatException e) {
-                    e.printStackTrace();
-                }
+                attachment.setColor(getEventResultColor(eventProblemData.getState()));
             }
         }
         attachments.add(attachment);
@@ -178,7 +174,7 @@ public class SlackCreator {
         if (eventResult != null && layoutBlocks != null && fallback != null) {
             Attachment attachment = new Attachment();
 
-            attachment.setColor(getEventResultColor(eventResult));
+            attachment.setColor(getEventResultColor(eventResult.getValue()));
             attachment.setBlocks(layoutBlocks);
             attachment.setFallback(fallback);
 
@@ -189,15 +185,15 @@ public class SlackCreator {
         return attachments;
     }
 
-    private static String getEventResultColor(KeptnCloudEventDataResult result) {
+    private static String getEventResultColor(String result) {
         String eventResultColor = null;
 
         if (result != null) {
-            if (KeptnCloudEventDataResult.PASS.equals(result) || KeptnCloudEventProblemData.RESOLVED.equals(result.getValue())) {
+            if (KeptnCloudEventDataResult.PASS.getValue().equals(result) || KeptnCloudEventProblemData.RESOLVED.equals(result)) {
                 eventResultColor = COLOR_PASS;
-            } else if (KeptnCloudEventDataResult.WARNING.equals(result)) {
+            } else if (KeptnCloudEventDataResult.WARNING.getValue().equals(result)) {
                 eventResultColor = COLOR_WARNING;
-            } else if (KeptnCloudEventDataResult.FAIL.equals(result) || KeptnCloudEventProblemData.OPEN.equals(result.getValue())) {
+            } else if (KeptnCloudEventDataResult.FAIL.getValue().equals(result) || KeptnCloudEventProblemData.OPEN.equals(result)) {
                 eventResultColor = COLOR_FAIL;
             }
         }
