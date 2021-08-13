@@ -1,5 +1,5 @@
 ---
-# Deployment of our   keptn-notification-service
+# Deployment of our keptn-notification-service
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -70,7 +70,7 @@ spec:
               value: '/quarkus/handleEvent'
       serviceAccountName: keptn-default
 ---
-# Expose   keptn-notification-service via Port 8080 within the cluster
+# Expose keptn-notification-service via Port 8080 within the cluster
 apiVersion: v1
 kind: Service
 metadata:
@@ -84,3 +84,4 @@ spec:
       protocol: TCP
   selector:
     run:   keptn-notification-service
+    
