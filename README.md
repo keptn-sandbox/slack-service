@@ -15,7 +15,7 @@ This implements a notification-service for Keptn. If you want to learn more abou
 To deploy the current version of the *notification-service* in your Keptn Kubernetes cluster, apply the [`deploy/service.yaml`](deploy/service.yaml) file:
 
 ```console
-kubectl apply -f deployment/service.yaml
+kubectl apply -f deploy/service.yaml
 ```
 This should install the `notification-service` together with a Keptn `distributor` into the `keptn` namespace, which you can verify using:
 
