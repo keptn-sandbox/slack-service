@@ -11,6 +11,7 @@ public class KeptnCloudEvent {
     private String datacontenttype;
     private Object data; //LinkedHashMap after 1. parsing, subclass of KeptnCloudEventData after 2. parsing
     private String shkeptncontext;
+    private String shkeptnspecversion;
     private String triggeredid;         //not available if type equals triggered
     private String time;
 
@@ -49,6 +50,10 @@ public class KeptnCloudEvent {
 
     public String getShkeptncontext() {
         return shkeptncontext;
+    }
+
+    public String getShkeptnspecversion() {
+        return shkeptnspecversion;
     }
 
     public String getTriggeredid() {
