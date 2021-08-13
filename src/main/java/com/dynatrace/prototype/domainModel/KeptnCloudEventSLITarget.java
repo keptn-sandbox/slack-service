@@ -2,7 +2,7 @@ package com.dynatrace.prototype.domainModel;
 
 public class KeptnCloudEventSLITarget {
     private String criteria;
-    private float targetValue; //TODO: maybe not even needed
+    private float targetValue;
     private boolean violated;
 
     public KeptnCloudEventSLITarget(String criteria, float targetValue, boolean violated) {

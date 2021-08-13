@@ -45,17 +45,21 @@ public class EvaluationMapper extends KeptnCloudEventMapper {
 
                 if (sliResIterator.hasNext()) {
                     specificDataSB.append("SLI:\n");
-                    specificDataSB.append(String.format("%-20s|", "Name")).append(String.format("%-20s|", "Value")).append(String.format("%-20s|", "pass Criteria")).append(String.format("%-20s|", "warning Criteria")).append(String.format("%-20s|", "Result")).append("Score\n");
+                    specificDataSB.append("Name").append(" | Value").append(" | pass Criteria").append(" | warning Criteria")
+                            .append(" | Result").append(" | Score\n");
                     while (sliResIterator.hasNext()) {
                         SLIEvaluationResult element = sliResIterator.next();
-                        specificDataSB.append(element.getDisplayName()).append("\t|\t").append(element.getValue().getValue()).append("\t|\t").append(element.getPassTargets().toString()).append("\t|\t").append(element.getWarningTargets().toString()).append("\t|\t").append(element.getStatus()).append("\t|\t").append(element.getScore()).append("\n");
+                        specificDataSB.append(element.getDisplayName()).append(" | ").append(element.getValue().getValue())
+                                .append(" | ").append(element.getPassTargets().toString()).append(" | ")
+                                .append(element.getWarningTargets().toString()).append(" | ").append(element.getStatus())
+                                .append(" | ").append(element.getScore()).append("\n");
                     }
                 }
             }
 
             if (specificDataSB.length() > 0) {
-                layoutBlockList.add(createSlackBlock(SectionBlock.TYPE, specificDataSB.toString()));
-                layoutBlockList.add(createSlackDividerBlock());
+                layoutBlockList.add(SlackCreator.createLayoutBlock(SectionBlock.TYPE, specificDataSB.toString()));
+                layoutBlockList.add(SlackCreator.createDividerBlock());
             }
         } else {
             System.out.println("WARN: eventData is not an instance of KeptnCloudEventEvaluationData although the event type is \"Evaluation\"!");

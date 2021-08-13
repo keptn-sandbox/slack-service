@@ -46,8 +46,8 @@ public class ProjectMapper extends KeptnCloudEventMapper {
                 }
             }
             if (specificDataSB.length() > 0) {
-                layoutBlockList.add(createSlackBlock(SectionBlock.TYPE, specificDataSB.toString()));
-                layoutBlockList.add(createSlackDividerBlock());
+                layoutBlockList.add(SlackCreator.createLayoutBlock(SectionBlock.TYPE, specificDataSB.toString()));
+                layoutBlockList.add(SlackCreator.createDividerBlock());
             }
         } else {
             System.out.println("WARN: eventData is not an instance of KeptnCloudEventProjectData although the event type is \"Project\"! (maybe because it is a .triggered event)");

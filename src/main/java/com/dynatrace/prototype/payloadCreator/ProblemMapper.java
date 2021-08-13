@@ -8,6 +8,7 @@ import com.slack.api.model.block.SectionBlock;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class ProblemMapper extends KeptnCloudEventMapper {
 
@@ -30,14 +31,15 @@ public class ProblemMapper extends KeptnCloudEventMapper {
             KeptnCloudEventProblemData eventData = (KeptnCloudEventProblemData) eventDataObject;
             StringBuilder specificDataSB = new StringBuilder();
 
-            specificDataSB.append(ifNotNull("State: ", eventData.getState(), "\n"));
+            specificDataSB.append(ifNotNull("State: ", Objects.toString(eventData.getState()), "\n"));
             specificDataSB.append(ifNotNull("Problem ID: ", eventData.getProblemID(), "\n"));
             specificDataSB.append(ifNotNull("Problem Title: ", eventData.getProblemTitle(), "\n"));
-            specificDataSB.append(ifNotNull(null, formatLink(eventData.getProblemURL(), "Problem URL"), "\n"));
+            specificDataSB.append(ifNotNull(null, SlackCreator.formatLink(eventData.getProblemURL(),
+                    "Problem URL"), "\n"));
 
             if (specificDataSB.length() > 0) {
-                layoutBlockList.add(createSlackBlock(SectionBlock.TYPE, specificDataSB.toString()));
-                layoutBlockList.add(createSlackDividerBlock());
+                layoutBlockList.add(SlackCreator.createLayoutBlock(SectionBlock.TYPE, specificDataSB.toString()));
+                layoutBlockList.add(SlackCreator.createDividerBlock());
             }
         } else {
             System.out.println("WARN: eventData is not an instance of KeptnCloudEventProblemData although the event type is \"Problem\"!");

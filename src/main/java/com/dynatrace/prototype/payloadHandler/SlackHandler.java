@@ -4,7 +4,6 @@ import com.dynatrace.prototype.ApprovalService;
 import com.dynatrace.prototype.domainModel.*;
 import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventApprovalData;
 import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventData;
-import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventProblemData;
 import com.dynatrace.prototype.payloadCreator.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.slack.api.Slack;
@@ -20,7 +19,6 @@ import com.slack.api.model.block.DividerBlock;
 import com.slack.api.model.block.LayoutBlock;
 import com.slack.api.model.block.SectionBlock;
 import com.slack.api.model.block.composition.MarkdownTextObject;
-import com.slack.api.model.block.composition.TextObject;
 import com.slack.api.model.block.element.BlockElement;
 import com.slack.api.model.block.element.ButtonElement;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
@@ -30,8 +28,10 @@ import javax.inject.Inject;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
-import java.util.zip.DataFormatException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
 
 @ApplicationScoped
 public class SlackHandler implements KeptnCloudEventHandler {
@@ -83,7 +83,7 @@ public class SlackHandler implements KeptnCloudEventHandler {
                     layoutBlockList.addAll(mapper.getSpecificData(event));
                 }
 
-                List<Attachment> attachments = createSlackAttachment(event, layoutBlockList, SLACK_NOTIFICATION_MSG);
+                List<Attachment> attachments = SlackCreator.createAttachment(event, layoutBlockList, SLACK_NOTIFICATION_MSG);
                 ChatPostMessageRequest request = ChatPostMessageRequest.builder()
                         .channel(channel)
                         .attachments(attachments)
@@ -139,89 +139,11 @@ public class SlackHandler implements KeptnCloudEventHandler {
     }
 
     /**
-     * Creates a list of slack attachments with one attachment with the given list as blocks.
-     * Evaluate the result of the keptn event and changes the color of the attachment accordingly.
+     * Create an attachment list with one attachment.
+     * The blocks of it are the updated slack message blocks.
      *
-     * @param event        Keptn Cloud Event to evaluate the result
-     * @param layoutBlocks that are added to the attachment
-     * @param fallback     of the attachment (e.g. message of notification)
-     * @return List<Attachment> with one attachment is successful or else null
-     */
-    private List<Attachment> createSlackAttachment(KeptnCloudEvent event, List<LayoutBlock> layoutBlocks, String fallback) {
-        List<Attachment> attachments = null;
-
-        if (event != null) {
-            Object eventDataObject = event.getData();
-
-            if (eventDataObject instanceof KeptnCloudEventData) {
-                KeptnCloudEventData eventData = (KeptnCloudEventData) eventDataObject;
-                KeptnCloudEventDataResult eventResult = null;
-
-                if (eventData.getResult() != null) {
-                    eventResult = eventData.getResult();
-                } else if (eventData instanceof KeptnCloudEventProblemData) {
-                    KeptnCloudEventProblemData eventProblemData = (KeptnCloudEventProblemData) eventData;
-                    try {
-                        eventResult = KeptnCloudEventDataResult.parseResult(eventProblemData.getState());
-                    } catch (DataFormatException e) {
-                        e.printStackTrace();
-                    }
-                }
-
-                attachments = createSlackAttachment(eventResult, layoutBlocks, fallback);
-            }
-        }
-
-        return attachments;
-    }
-
-    /**
-     * Creates a list of slack attachments with one attachment with the given list as blocks.
-     * Changes the color of the attachment according to the eventResult.
-     *
-     * @param eventResult  to set the color accordingly
-     * @param layoutBlocks that are added to the attachment
-     * @param fallback     of the attachment (e.g. message of notification)
-     * @return List<Attachment> with one attachment if successful or else null
-     */
-    private List<Attachment> createSlackAttachment(KeptnCloudEventDataResult eventResult, List<LayoutBlock> layoutBlocks, String fallback) {
-        List<Attachment> attachments = null;
-
-        if (eventResult != null && layoutBlocks != null && fallback != null) {
-            Attachment attachment = new Attachment();
-
-            attachment.setColor(getEventResultColor(eventResult));
-            attachment.setBlocks(layoutBlocks);
-            attachment.setFallback(fallback);
-
-            attachments = new ArrayList<>();
-            attachments.add(attachment);
-        }
-
-        return attachments;
-    }
-
-    private String getEventResultColor(KeptnCloudEventDataResult result) {
-        String eventResultColor = null;
-
-        if (result != null) {
-            if (KeptnCloudEventDataResult.PASS.equals(result) || KeptnCloudEventProblemData.RESOLVED.equals(result.getValue())) {
-                eventResultColor = COLOR_PASS;
-            } else if (KeptnCloudEventDataResult.WARNING.equals(result)) {
-                eventResultColor = COLOR_WARNING;
-            } else if (KeptnCloudEventDataResult.FAIL.equals(result) || KeptnCloudEventProblemData.OPEN.equals(result.getValue())) {
-                eventResultColor = COLOR_FAIL;
-            }
-        }
-
-        return eventResultColor;
-    }
-
-    /**
-     * Creates an attac
-     *
-     * @param payload
-     * @return
+     * @param payload of the button click
+     * @return a list with one attachment if successful or else null
      */
     private List<Attachment> createUpdateMessage(BlockActionPayload payload) {
         List<Attachment> attachments = null;
@@ -273,7 +195,7 @@ public class SlackHandler implements KeptnCloudEventHandler {
                 newBlocks.add(SectionBlock.builder().text(MarkdownTextObject.builder().text(updateMsg).build()).build());
             }
 
-            attachments = createSlackAttachment(approvalFinishedResult, newBlocks, "updated message");
+            attachments = SlackCreator.createSlackAttachment(approvalFinishedResult, newBlocks, "updated message");
         }
 
         return attachments;
