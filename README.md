@@ -48,7 +48,7 @@ It needs the following configuration:
 
   The Kubernetes secret `keptn-access` containing the value `KEPTN_BRIDGE_DOMAIN` is needed.
 
-<!-- add installation here -->
+<!-- is an installation like https://github.com/keptn-sandbox/monaco-service/blob/main/README.md#option-1-monaco-projects-folders needed? -->
 
 ## Development
 
@@ -56,11 +56,11 @@ This is an open source project, so I welcome any contributions to make it even b
 
 ### Build yourself
 
-<!-- Check / change the names of everything / create files and folders -->
-
 * Build the binary: `./mvnw package -Pnative` (with GraalVM) `./mvnw package -Pnative -Dquarkus.native.container-build=true` (without GraalVM)
 * Build not a binary: `./mvnw package`
 * Run tests: ``
+
+<!-- what name should the docker image have / the value before the '/' -->
 * Build the docker image: `docker build -f src/main/docker/Dockerfile.native -t quarkus/notification-service .`
 * Run the docker image locally: `docker run -i --rm -p 8080:8080 quarkus/notification-service`
 
@@ -70,9 +70,9 @@ This is an open source project, so I welcome any contributions to make it even b
 * Delete/undeploy the service using `kubectl`: `kubectl delete -f deploy/`
 * Watch the deployment using `kubectl`: `kubectl -n keptn get deployment notification-service -o wide`
 
-<!-- test this -->
-
+<!-- error: a container name must be specified for pod ... What should I do? -->
 * Get logs using `kubectl`: `kubectl -n keptn logs deployment/notification-service -f`
+
 * Watch the deployed pods using `kubectl`: `kubectl -n keptn get pods -l run=notification-service`
 
 ## License
