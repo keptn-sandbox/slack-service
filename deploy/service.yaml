@@ -1,22 +1,22 @@
 ---
-# Deployment of our keptn-notification-service
+# Deployment of our notification-service
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name:  keptn-notification-service
+  name:  notification-service
   namespace: keptn
 spec:
   selector:
     matchLabels:
-      run:   keptn-notification-service
+      run:   notification-service
   replicas: 1
   template:
     metadata:
       labels:
-        run:   keptn-notification-service
+        run:   notification-service
     spec:
       containers:
-        - name:   keptn-notification-service
+        - name:   notification-service
           image: nicohebein/notification-service:latest
           imagePullPolicy: Always
           ports:
@@ -70,18 +70,18 @@ spec:
               value: '/quarkus/handleEvent'
       serviceAccountName: keptn-default
 ---
-# Expose keptn-notification-service via Port 8080 within the cluster
+# Expose notification-service via Port 8080 within the cluster
 apiVersion: v1
 kind: Service
 metadata:
-  name:   keptn-notification-service
+  name:   notification-service
   namespace: keptn
   labels:
-    run:   keptn-notification-service
+    run:   notification-service
 spec:
   ports:
     - port: 8080
       protocol: TCP
   selector:
-    run:   keptn-notification-service
+    run:   notification-service
     
