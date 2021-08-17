@@ -15,7 +15,7 @@ public class GetSLIMapper extends KeptnCloudEventMapper {
     public List<LayoutBlock> getSpecificData(KeptnCloudEvent event) {
         List<LayoutBlock> layoutBlockList = new ArrayList<>();
 
-        if (event.getType().startsWith(KeptnEvent.GET_SLI.getValue())) {
+        if (KeptnEvent.GET_SLI.getValue().equals(event.getTaskName())) {
             layoutBlockList.addAll(getSLIData(event));
         }
 

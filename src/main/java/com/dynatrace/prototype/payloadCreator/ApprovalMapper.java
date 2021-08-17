@@ -32,7 +32,7 @@ public class ApprovalMapper extends KeptnCloudEventMapper {
     public List<LayoutBlock> getSpecificData(KeptnCloudEvent event) {
         List<LayoutBlock> layoutBlockList = new ArrayList<>();
 
-        if (event.getType().startsWith(KeptnEvent.APPROVAL.getValue())) {
+        if (KeptnEvent.APPROVAL.getValue().equals(event.getTaskName())) {
             layoutBlockList.addAll(getApprovalData(event));
         }
 

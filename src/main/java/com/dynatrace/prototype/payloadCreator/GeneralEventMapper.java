@@ -1,7 +1,6 @@
 package com.dynatrace.prototype.payloadCreator;
 
 import com.dynatrace.prototype.domainModel.KeptnCloudEvent;
-import com.dynatrace.prototype.domainModel.KeptnEvent;
 import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventData;
 import com.slack.api.model.block.HeaderBlock;
 import com.slack.api.model.block.LayoutBlock;
@@ -26,12 +25,15 @@ public class GeneralEventMapper extends KeptnCloudEventMapper {
     private List<LayoutBlock> getGeneralData(KeptnCloudEvent event) {
         List<LayoutBlock> layoutBlockList = new ArrayList<>();
 
-        String eventName = event.getType();
-        eventName = eventName.replace(KeptnEvent.SH_KEPTN_EVENT.getValue() +".", "");
+        //TODO: implement name for sequence event type
+        String eventName = event.getTaskName();
         eventName = StringUtils.capitalise(eventName);
-        eventName = StringUtils.reverse(StringUtils.reverse(eventName).replaceFirst("\\.", " - "));
 
-        if (!eventName.isBlank()) {
+        if (event.getPlainEventType() != null) {
+            eventName += " - " +event.getPlainEventType();
+        }
+
+        if (eventName != null) {
             layoutBlockList.add(SlackCreator.createLayoutBlock(HeaderBlock.TYPE, eventName));
         }
 

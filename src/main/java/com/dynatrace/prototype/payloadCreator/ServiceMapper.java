@@ -16,7 +16,7 @@ public class ServiceMapper extends KeptnCloudEventMapper {
     public List<LayoutBlock> getSpecificData(KeptnCloudEvent event) {
         List<LayoutBlock> layoutBlockList = new ArrayList<>();
 
-        if (event.getType().startsWith(KeptnEvent.SERVICE.getValue())) {
+        if (KeptnEvent.SERVICE.getValue().equals(event.getTaskName())) {
             layoutBlockList.addAll(getServiceData(event));
         }
 

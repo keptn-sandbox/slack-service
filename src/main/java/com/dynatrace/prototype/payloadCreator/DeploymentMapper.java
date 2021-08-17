@@ -16,7 +16,7 @@ public class DeploymentMapper extends KeptnCloudEventMapper {
     public List<LayoutBlock> getSpecificData(KeptnCloudEvent event) {
         List<LayoutBlock> layoutBlockList = new ArrayList<>();
 
-        if (event.getType().startsWith(KeptnEvent.DEPLOYMENT.getValue())) {
+        if (KeptnEvent.DEPLOYMENT.getValue().equals(event.getTaskName())) {
             layoutBlockList.addAll(getDeploymentData(event));
         }
 

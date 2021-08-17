@@ -6,6 +6,7 @@ import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventApprovalData
 import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventData;
 import com.dynatrace.prototype.payloadCreator.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.slack.api.Slack;
 import com.slack.api.app_backend.interactive_components.payload.BlockActionPayload;
 import com.slack.api.methods.SlackApiException;
@@ -263,11 +264,19 @@ public class SlackHandler implements KeptnCloudEventHandler {
                         approvalTriggeredData.getService(), approvalTriggeredData.getStage(), approvalTriggeredData.getLabels(),
                         "", KeptnCloudEventDataStatus.SUCCEEDED, approvalResult);
 
-                KeptnCloudEvent eventFinished = new KeptnCloudEvent(Objects.toString(UUID.randomUUID()), approvalTriggered.getSpecversion(),
-                        approvalTriggered.getSource(), KeptnEvent.APPROVAL_FINISHED.getValue(),
-                        approvalTriggered.getDatacontenttype(), approvalFinishedData, approvalTriggered.getShkeptncontext(),
-                        approvalTriggered.getId(), OffsetDateTime.now().format(DateTimeFormatter.ISO_ZONED_DATE_TIME));
+                KeptnCloudEvent eventFinished = new KeptnCloudEvent(Objects.toString(UUID.randomUUID()),
+                        approvalTriggered.getSpecversion(), approvalTriggered.getSource(),
+                        KeptnEvent.APPROVAL, KeptnEvent.FINISHED, approvalTriggered.getDatacontenttype(), approvalFinishedData,
+                        approvalTriggered.getShkeptncontext(), approvalTriggered.getId(),
+                        OffsetDateTime.now().format(DateTimeFormatter.ISO_ZONED_DATE_TIME));
 
+                ObjectMapper mapper = new ObjectMapper();
+
+                try {
+                    System.out.println(mapper.writeValueAsString(eventFinished));
+                } catch (JsonProcessingException e) {
+                    e.printStackTrace();
+                }
                 approvalService.sentApprovalFinished(eventFinished);
             }
         }
