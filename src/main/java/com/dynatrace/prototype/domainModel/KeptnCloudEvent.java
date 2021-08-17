@@ -11,13 +11,16 @@ public class KeptnCloudEvent {
     private String datacontenttype;
     private Object data; //LinkedHashMap after 1. parsing, subclass of KeptnCloudEventData after 2. parsing
     private String shkeptncontext;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private String shkeptnspecversion;
-    private String triggeredid;         //not available if type equals triggered
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String triggeredid; //not available if type equals triggered
     private String time;
 
     public KeptnCloudEvent() {}
 
-    public KeptnCloudEvent(String specversion, String source, String type, String datacontenttype, Object data, String shkeptncontext, String triggeredid, String time) {
+    public KeptnCloudEvent(String id, String specversion, String source, String type, String datacontenttype, Object data, String shkeptncontext, String triggeredid, String time) {
+        this.id = id;
         this.specversion = specversion;
         this.source = source;
         this.type = type;
