@@ -48,6 +48,25 @@ It needs the following configuration:
 
   The Kubernetes secret `keptn-access` containing the value `KEPTN_BRIDGE_DOMAIN` is needed.
 
+These variables can be set in the `service.yaml` file, but their name must not be changed!
+```yaml
+- name: SLACK_TOKEN
+  valueFrom:
+    secretKeyRef:
+      key: SLACK_TOKEN
+      name: slack-access
+- name: SLACK_CHANNEL
+  valueFrom:
+    secretKeyRef:
+      key: SLACK_CHANNEL
+      name: slack-access
+- name: KEPTN_BRIDGE_DOMAIN
+  valueFrom:
+    secretKeyRef:
+      key: KEPTN_BRIDGE_DOMAIN
+      name: keptn-access
+```
+
 <!-- is an installation like https://github.com/keptn-sandbox/monaco-service/blob/main/README.md#option-1-monaco-projects-folders needed? -->
 
 ## Development
