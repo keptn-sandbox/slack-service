@@ -15,7 +15,7 @@ public class GeneralEventMapper extends KeptnCloudEventMapper {
     private static final String APP_LAYER_PROTOCOL = "http";
     private static final String KEPTN_BRIDGE_NAME = "Keptn bridge";
     private static final String KEPTN_BRIDGE_DASHBOARD = "/bridge/dashboard";
-    private static final String KEPTN_BRIDGE_PROJECT = "/bridge/project";
+    private static final String KEPTN_BRIDGE_PROJECT = "/bridge/project/";
 
     @Override
     public List<LayoutBlock> getSpecificData(KeptnCloudEvent event) {
@@ -49,8 +49,9 @@ public class GeneralEventMapper extends KeptnCloudEventMapper {
                 eventURLSB.append(APP_LAYER_PROTOCOL).append("://").append(keptnBridgeDomain).append(KEPTN_BRIDGE_DASHBOARD);
 
                 if (eventData.getProject() != null) {
+                    eventURLSB.setLength(0); //clears its content
                     eventURLSB.append(APP_LAYER_PROTOCOL).append("://").append(keptnBridgeDomain)
-                            .append(KEPTN_BRIDGE_PROJECT).append(eventData.getProject()).append("/sequence")
+                            .append(KEPTN_BRIDGE_PROJECT).append(eventData.getProject()).append("/sequence/")
                             .append(event.getShkeptncontext()).append("/event/").append(event.getId());
                 }
 
