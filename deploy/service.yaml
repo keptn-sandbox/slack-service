@@ -40,7 +40,7 @@ spec:
                   key: KEPTN_BRIDGE_DOMAIN
                   name: keptn-access
         - name: distributor
-          image: keptn/distributor:0.8.5
+          image: keptn/distributor:0.8.7
           livenessProbe:
             httpGet:
               path: /health
