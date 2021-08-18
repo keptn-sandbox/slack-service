@@ -269,14 +269,7 @@ public class SlackHandler implements KeptnCloudEventHandler {
                         KeptnEvent.APPROVAL, KeptnEvent.FINISHED, approvalTriggered.getDatacontenttype(), approvalFinishedData,
                         approvalTriggered.getShkeptncontext(), approvalTriggered.getId(),
                         OffsetDateTime.now().format(DateTimeFormatter.ISO_ZONED_DATE_TIME));
-
-                ObjectMapper mapper = new ObjectMapper();
-
-                try {
-                    System.out.println(mapper.writeValueAsString(eventFinished));
-                } catch (JsonProcessingException e) {
-                    e.printStackTrace();
-                }
+                
                 approvalService.sentApprovalFinished(eventFinished);
             }
         }
