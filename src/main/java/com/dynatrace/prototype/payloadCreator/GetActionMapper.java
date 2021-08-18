@@ -1,22 +1,28 @@
 package com.dynatrace.prototype.payloadCreator;
 
 import com.dynatrace.prototype.domainModel.KeptnCloudEvent;
+import com.dynatrace.prototype.domainModel.KeptnCloudEventDataResult;
 import com.dynatrace.prototype.domainModel.KeptnEvent;
 import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventActionData;
 import com.slack.api.model.block.LayoutBlock;
 import com.slack.api.model.block.SectionBlock;
+import org.apache.maven.shared.utils.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 public class GetActionMapper extends KeptnCloudEventMapper {
+    private static KeptnEvent eventName = KeptnEvent.ACTION;
 
     @Override
     public List<LayoutBlock> getSpecificData(KeptnCloudEvent event) {
         List<LayoutBlock> layoutBlockList = new ArrayList<>();
 
-        if (KeptnEvent.GET_ACTION.getValue().equals(event.getTaskName()) || KeptnEvent.ACTION.getValue().equals(event.getTaskName())) {
+        if (KeptnEvent.ACTION.getValue().equals(event.getTaskName())) {
+            layoutBlockList.addAll(getActionData(event));
+        } else if (KeptnEvent.GET_ACTION.getValue().equals(event.getTaskName())) {
+            eventName = KeptnEvent.GET_ACTION;
             layoutBlockList.addAll(getActionData(event));
         }
 
@@ -29,17 +35,25 @@ public class GetActionMapper extends KeptnCloudEventMapper {
 
         if (eventDataObject instanceof KeptnCloudEventActionData) {
             KeptnCloudEventActionData eventData = (KeptnCloudEventActionData) eventDataObject;
-            StringBuilder specificDataSB = new StringBuilder();
+            StringBuilder message = new StringBuilder();
+            KeptnCloudEventDataResult result = eventData.getResult();
+            KeptnEvent eventType = KeptnEvent.valueOf(StringUtils.upperCase(event.getPlainEventType()));
+            String service = eventData.getService();
+            String stage = eventData.getStage();
+            String project = eventData.getProject();
 
-            specificDataSB.append(ifNotNull("Problem title: ", eventData.getProblemTitle(), "\n"));
-            specificDataSB.append(ifNotNull("Problem root cause: ", eventData.getProblemRootCause(), "\n"));
-            specificDataSB.append(ifNotNull("Action name: ", eventData.getActionName(), "\n"));
-            specificDataSB.append(ifNotNull("Action: ", eventData.getRealAction(), "\n"));
-            specificDataSB.append(ifNotNull("Action description: ", eventData.getActionDescription(), "\n"));
-            specificDataSB.append(ifNotNull("Additional action values: ", Objects.toString(eventData.getAdditionalActionValues()), "\n"));
+            if (stage == null) {
+                System.err.printf(ERROR_NULL_VALUE, "Stage", eventName);
+            } else if (service == null) {
+                System.err.printf(ERROR_NULL_VALUE, "Service", eventName);
+            } else if (project == null) {
+                System.err.printf(ERROR_NULL_VALUE, "Project", eventName);
+            } else {
+                message.append(createMessage(result, eventType, eventName, service, stage, project));
+            }
 
-            if (specificDataSB.length() > 0) {
-                layoutBlockList.add(SlackCreator.createLayoutBlock(SectionBlock.TYPE, specificDataSB.toString()));
+            if (message.length() > 0) {
+                layoutBlockList.add(SlackCreator.createLayoutBlock(SectionBlock.TYPE, message.toString()));
                 layoutBlockList.add(SlackCreator.createDividerBlock());
             }
         } else {

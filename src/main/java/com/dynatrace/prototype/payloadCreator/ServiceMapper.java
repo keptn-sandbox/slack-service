@@ -11,12 +11,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ServiceMapper extends KeptnCloudEventMapper {
+    private static final KeptnEvent eventName = KeptnEvent.SERVICE;
 
     @Override
     public List<LayoutBlock> getSpecificData(KeptnCloudEvent event) {
         List<LayoutBlock> layoutBlockList = new ArrayList<>();
 
-        if (KeptnEvent.SERVICE.getValue().equals(event.getTaskName())) {
+        if (eventName.getValue().equals(event.getTaskName())) {
             layoutBlockList.addAll(getServiceData(event));
         }
 
@@ -34,9 +35,9 @@ public class ServiceMapper extends KeptnCloudEventMapper {
             KeptnCloudEventDataResult eventResult = eventData.getResult();
             String eventStage = eventData.getStage();
 
-            if (KeptnCloudEventDataResult.PASS.getValue().equals(eventResult.getValue())) {
+            if (KeptnCloudEventDataResult.PASS.equals(eventResult)) {
                 specificDataSB.append(ifNotNull("The service '", serviceName, "' was successfully created in the stage '" +eventStage +"'."));
-            } else if (KeptnCloudEventDataResult.FAIL.getValue().equals(eventResult.getValue())) {
+            } else if (KeptnCloudEventDataResult.FAIL.equals(eventResult)) {
                 specificDataSB.append(ifNotNull("There was an error creating the service '", serviceName, "' in the stage '" +eventStage +"' !"));
             }
 
