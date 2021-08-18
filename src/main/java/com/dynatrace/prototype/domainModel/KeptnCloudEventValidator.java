@@ -10,27 +10,13 @@ public class KeptnCloudEventValidator {
 
     private static final String TASK_PROJECT = "project";
     private static final String TASK_SERVICE = "service";
-
-    private static boolean isSequenceEventType(String[] parts) {
-        boolean result = isValidEventType(parts, 6);
-        int i = 0;
-
-        while (result && i < parts.length) {
-            if (TASK_PROJECT.equals(parts[i]) || TASK_SERVICE.equals(parts[i])) {
-                result = false;
-            }
-
-            i++;
-        }
-
-        return result;
-    }
+    private static final String TASK_CREATE = "create";
 
     /**
      * Parses the given String into a HashMap with the entries 'stageName', 'sequenceName' and 'eventType' if it is
      * a valid event type.
      * @param sequenceTriggeredEventType String to parse
-     * @return Filles HashMap if successful or else null
+     * @return Filled HashMap if successful or else null
      */
     public static HashMap<String, String> parseSequenceEventType(String sequenceTriggeredEventType) {
         HashMap<String, String> eventMetaData = null;
@@ -44,6 +30,16 @@ public class KeptnCloudEventValidator {
         }
 
         return eventMetaData;
+    }
+
+    private static boolean isSequenceEventType(String[] parts) {
+        boolean result = isValidEventType(parts, 6);
+
+        if ((TASK_PROJECT.equals(parts[3]) || TASK_SERVICE.equals(parts[3])) && TASK_CREATE.equals(parts[4])) {
+            result = false;
+        }
+
+        return result;
     }
 
     /**
@@ -66,23 +62,11 @@ public class KeptnCloudEventValidator {
             eventMetaData.put(TASK_NAME, parts[3]);
             eventMetaData.put(EVENT_TYPE, parts[4]);
 
-        } else if (isValidEventType(parts, 6)) {
-            boolean validTaskEvent = false;
-            int i = 0;
-
-            while (!validTaskEvent && i < parts.length) {
-                if (TASK_PROJECT.equals(parts[i]) || TASK_SERVICE.equals(parts[i])) {
-                    validTaskEvent = true;
-                }
-
-                i++;
-            }
-
-            if (validTaskEvent) {
-                eventMetaData = new HashMap<>();
-                eventMetaData.put(TASK_NAME, parts[3] +"." +parts[4]);
-                eventMetaData.put(EVENT_TYPE, parts[5]);
-            }
+        } else if (isValidEventType(parts, 6) &&
+                (TASK_PROJECT.equals(parts[3]) || TASK_SERVICE.equals(parts[3])) && TASK_CREATE.equals(parts[4])) {
+            eventMetaData = new HashMap<>();
+            eventMetaData.put(TASK_NAME, parts[3] +"." +parts[4]);
+            eventMetaData.put(EVENT_TYPE, parts[5]);
         }
 
         return eventMetaData;

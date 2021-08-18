@@ -24,17 +24,21 @@ public class GeneralEventMapper extends KeptnCloudEventMapper {
 
     private List<LayoutBlock> getGeneralData(KeptnCloudEvent event) {
         List<LayoutBlock> layoutBlockList = new ArrayList<>();
+        StringBuilder eventName = new StringBuilder();
+        boolean isSequenceEvent = false;
 
-        //TODO: implement name for sequence event type
-        String eventName = event.getTaskName();
-        eventName = StringUtils.capitalise(eventName);
-
-        if (event.getPlainEventType() != null) {
-            eventName += " - " +event.getPlainEventType();
+        if (event.getTaskName() != null) {
+            eventName.append(StringUtils.capitalise(event.getTaskName()));
+        } else if (event.getStageName() != null && event.getSequenceName() != null) {
+            isSequenceEvent = true;
+            eventName.append(event.getStageName()).append('.').append(StringUtils.capitalise(event.getSequenceName()));
         }
 
-        if (eventName != null) {
-            layoutBlockList.add(SlackCreator.createLayoutBlock(HeaderBlock.TYPE, eventName));
+        if (eventName.length() > 0) {
+            if (event.getPlainEventType() != null) {
+                eventName.append(" - ").append(event.getPlainEventType());
+            }
+            layoutBlockList.add(SlackCreator.createLayoutBlock(HeaderBlock.TYPE, eventName.toString()));
         }
 
         String keptnBridgeDomain = System.getenv(ENV_KEPTN_BRIDGE_DOMAIN);
@@ -46,13 +50,15 @@ public class GeneralEventMapper extends KeptnCloudEventMapper {
             if (eventDataObject instanceof KeptnCloudEventData) {
                 KeptnCloudEventData eventData = (KeptnCloudEventData) eventDataObject;
                 StringBuilder eventURLSB = new StringBuilder();
-                eventURLSB.append(APP_LAYER_PROTOCOL).append("://").append(keptnBridgeDomain).append(KEPTN_BRIDGE_DASHBOARD);
+                eventURLSB.append(APP_LAYER_PROTOCOL).append("://").append(keptnBridgeDomain);
 
                 if (eventData.getProject() != null) {
-                    eventURLSB.setLength(0); //clears its content
-                    eventURLSB.append(APP_LAYER_PROTOCOL).append("://").append(keptnBridgeDomain)
-                            .append(KEPTN_BRIDGE_PROJECT).append(eventData.getProject()).append("/sequence/")
-                            .append(event.getShkeptncontext()).append("/event/").append(event.getId());
+                    eventURLSB.append(KEPTN_BRIDGE_PROJECT).append(eventData.getProject()).append("/sequence/");
+                    if (!isSequenceEvent && event.getShkeptncontext() != null && event.getId() != null) {
+                        eventURLSB.append(event.getShkeptncontext()).append("/event/").append(event.getId());
+                    }
+                } else {
+                    eventURLSB.append(KEPTN_BRIDGE_DASHBOARD);
                 }
 
                 layoutBlockList.add(SlackCreator.createLayoutBlock(SectionBlock.TYPE, SlackCreator.formatLink(eventURLSB.toString(),

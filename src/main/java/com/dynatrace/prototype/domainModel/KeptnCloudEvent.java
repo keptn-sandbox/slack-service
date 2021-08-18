@@ -1,5 +1,6 @@
 package com.dynatrace.prototype.domainModel;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -12,9 +13,10 @@ public class KeptnCloudEvent {
     private String id;
     private String source;
     @JsonProperty(value = "type")
-    private String fullEventType; //TODO: check if serialized as 'type'
+    private String fullEventType;
     @JsonIgnore
     private HashMap<String, String> metaData; //includes 'stageName', 'sequenceName' and 'eventType' or 'taskName' and 'eventType'
+    @JsonAlias("contenttype")
     private String datacontenttype;
     private Object data; //LinkedHashMap after 1. parsing, subclass of KeptnCloudEventData after 2. parsing
     private String shkeptncontext;
@@ -57,21 +59,36 @@ public class KeptnCloudEvent {
 
     @JsonIgnore
     public String getTaskName() {
-        String taskName = null;
-
-        if (metaData != null) {
-            taskName = metaData.get(KeptnCloudEventValidator.TASK_NAME);
-        }
-
-        return taskName;
+        return getSpecificMetaData(KeptnCloudEventValidator.TASK_NAME);
     }
 
     @JsonIgnore
     public String getPlainEventType() {
+        return getSpecificMetaData(KeptnCloudEventValidator.EVENT_TYPE);
+    }
+
+    @JsonIgnore
+    public String getStageName() {
+        return getSpecificMetaData(KeptnCloudEventValidator.STAGE_NAME);
+    }
+
+    @JsonIgnore
+    public String getSequenceName() {
+        return getSpecificMetaData(KeptnCloudEventValidator.SEQUENCE_NAME);
+    }
+
+    /**
+     * Returns the value of the given field from the metaData HashMap if successful or else null.
+     * Null is possible if the field does not exists, its value is null or the HashMap metaData is null.
+     * @param field of metaData
+     * @return the value of field or else null
+     */
+    @JsonIgnore
+    private String getSpecificMetaData(String field) {
         String eventType = null;
 
         if (metaData != null) {
-            eventType =  metaData.get(KeptnCloudEventValidator.EVENT_TYPE);
+            eventType =  metaData.get(field);
         }
 
         return eventType;

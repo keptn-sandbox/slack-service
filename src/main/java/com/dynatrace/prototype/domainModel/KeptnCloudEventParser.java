@@ -28,7 +28,11 @@ public class KeptnCloudEventParser {
         HashMap<String, String> eventMetaData = KeptnCloudEventValidator.parseSequenceEventType(fullEventType);
 
         if (eventMetaData != null) {
-            //TODO: parse sequence event type
+            try {
+                event.setData(mapper.convertValue(event.getData(), KeptnCloudEventData.class));
+            } catch (Exception e) {
+                System.err.println(e.getMessage());
+            }
         } else {
             eventMetaData = KeptnCloudEventValidator.parseTaskEventType(fullEventType);
 
@@ -67,9 +71,9 @@ public class KeptnCloudEventParser {
                     parsed = false;
                 }
             }
-
-            event.setMetaData(eventMetaData);
         }
+
+        event.setMetaData(eventMetaData);
 
         return parsed;
     }
