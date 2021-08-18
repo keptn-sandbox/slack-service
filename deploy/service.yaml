@@ -1,0 +1,87 @@
+---
+# Deployment of our notification-service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name:  notification-service
+  namespace: keptn
+spec:
+  selector:
+    matchLabels:
+      run:   notification-service
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        run:   notification-service
+    spec:
+      containers:
+        - name:   notification-service
+          image: nicohebein/notification-service:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          env:
+            - name: CONFIGURATION_SERVICE
+              value: 'http://configuration-service:8080'
+            - name: SLACK_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  key: SLACK_TOKEN
+                  name: slack-access
+            - name: SLACK_CHANNEL
+              valueFrom:
+                secretKeyRef:
+                  key: SLACK_CHANNEL
+                  name: slack-access
+            - name: KEPTN_BRIDGE_DOMAIN
+              valueFrom:
+                secretKeyRef:
+                  key: KEPTN_BRIDGE_DOMAIN
+                  name: keptn-access
+        - name: distributor
+          image: keptn/distributor:0.8.7
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 10999
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          resources:
+            requests:
+              memory: "16Mi"
+              cpu: "25m"
+            limits:
+              memory: "128Mi"
+              cpu: "250m"
+          env:
+            - name: PUBSUB_URL
+              value: 'nats://keptn-nats-cluster'
+            - name: PUBSUB_TOPIC
+              value: 'sh.keptn.>'
+            - name: PUBSUB_RECIPIENT
+              value: '127.0.0.1'
+            - name: PUBSUB_RECIPIENT_PORT
+              value: '8080'
+            - name: PUBSUB_RECIPIENT_PATH
+              value: '/quarkus/handleEvent'
+      serviceAccountName: keptn-default
+---
+# Expose notification-service via Port 8080 within the cluster
+apiVersion: v1
+kind: Service
+metadata:
+  name:   notification-service
+  namespace: keptn
+  labels:
+    run:   notification-service
+spec:
+  ports:
+    - port: 8080
+      protocol: TCP
+  selector:
+    run:   notification-service
+    

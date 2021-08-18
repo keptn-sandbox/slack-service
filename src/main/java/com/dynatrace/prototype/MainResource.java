@@ -44,7 +44,7 @@ public class MainResource {
 
     @POST
     @Consumes({MediaType.APPLICATION_FORM_URLENCODED})
-    @Path("/slackUserInput")
+    @Path("/sendEvent")
     public String sendEvent(String payload) {
         String result = "Something went wrong!";
         JsonPayloadExtractor extractor = new JsonPayloadExtractor();
