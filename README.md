@@ -49,6 +49,7 @@ It needs the following configuration:
   The Kubernetes secret `keptn-access` containing the value `KEPTN_BRIDGE_DOMAIN` is needed.
 
 These variables can be set in the `service.yaml` file, but their name must not be changed!
+
 ```yaml
 - name: SLACK_TOKEN
   valueFrom:
@@ -67,8 +68,6 @@ These variables can be set in the `service.yaml` file, but their name must not b
       name: keptn-access
 ```
 
-<!-- is an installation like https://github.com/keptn-sandbox/monaco-service/blob/main/README.md#option-1-monaco-projects-folders needed? -->
-
 ## Development
 
 This is an open source project, so I welcome any contributions to make it even better!
@@ -78,20 +77,13 @@ This is an open source project, so I welcome any contributions to make it even b
 * Build the binary: `./mvnw package -Pnative` (with GraalVM) `./mvnw package -Pnative -Dquarkus.native.container-build=true` (without GraalVM)
 * Build not a binary: `./mvnw package`
 * Run tests: ``
-
-<!-- what name should the docker image have / the value before the '/' -->
-* Build the docker image: `docker build -f src/main/docker/Dockerfile.native -t quarkus/notification-service .`
-* Run the docker image locally: `docker run -i --rm -p 8080:8080 quarkus/notification-service`
-
-<!-- Also true for my project? -->
-* Push the docker image to DockerHub: `docker push keptnsandbox/notification-service:dev`
+* Build the docker image: `docker build -f src/main/docker/Dockerfile.native -t <your_docker_user>/notification-service .`
+* Run the docker image locally: `docker run -i --rm -p 8080:8080 <your_docker_user>/notification-service`
+* Push the docker image to DockerHub: `docker push <your_docker_user>/notification-service`
 * Deploy the service using `kubectl`: `kubectl apply -f deploy/`
 * Delete/undeploy the service using `kubectl`: `kubectl delete -f deploy/`
 * Watch the deployment using `kubectl`: `kubectl -n keptn get deployment notification-service -o wide`
-
-<!-- error: a container name must be specified for pod ... What should I do? -->
-* Get logs using `kubectl`: `kubectl -n keptn logs deployment/notification-service -f`
-
+* Get logs using `kubectl`: `kubectl -n keptn logs deployment/notification-service -c notification-service -f`
 * Watch the deployed pods using `kubectl`: `kubectl -n keptn get pods -l run=notification-service`
 
 ## License
