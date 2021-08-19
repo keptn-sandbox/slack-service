@@ -10,7 +10,6 @@ import org.apache.maven.shared.utils.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 public class GetActionMapper extends KeptnCloudEventMapper {
     private static KeptnEvent eventName = KeptnEvent.ACTION;

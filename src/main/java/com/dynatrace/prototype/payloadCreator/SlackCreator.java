@@ -4,6 +4,7 @@ import com.dynatrace.prototype.domainModel.KeptnCloudEvent;
 import com.dynatrace.prototype.domainModel.KeptnCloudEventDataResult;
 import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventData;
 import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventProblemData;
+import com.slack.api.methods.request.chat.ChatPostMessageRequest;
 import com.slack.api.model.Attachment;
 import com.slack.api.model.block.*;
 import com.slack.api.model.block.composition.ConfirmationDialogObject;
@@ -15,6 +16,7 @@ import com.slack.api.model.block.element.ButtonElement;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static com.slack.api.model.block.composition.BlockCompositions.markdownText;
 
@@ -129,51 +131,19 @@ public class SlackCreator {
 
     /**
      * Creates a list of slack attachments with one attachment with the given list as blocks.
-     * Evaluate the result of the keptn event and changes the color of the attachment accordingly.
-     *
-     * @param event        Keptn Cloud Event to evaluate the result
-     * @param layoutBlocks that are added to the attachment
-     * @param fallback     of the attachment (e.g. message of notification)
-     * @return List<Attachment> with one attachment
-     */
-    public static List<Attachment> createAttachment(KeptnCloudEvent event, List<LayoutBlock> layoutBlocks, String fallback) {
-        List<Attachment> attachments = new ArrayList<>();
-        Attachment attachment = new Attachment();
-        Object eventDataObject = event.getData();
-
-        attachment.setBlocks(layoutBlocks);
-        attachment.setFallback(fallback);
-        if (eventDataObject instanceof KeptnCloudEventData) {
-            KeptnCloudEventData eventData = (KeptnCloudEventData) eventDataObject;
-
-            if (eventData.getResult() != null) {
-                attachment.setColor(getEventResultColor(eventData.getResult().getValue()));
-            } else if (eventData instanceof KeptnCloudEventProblemData) {
-                KeptnCloudEventProblemData eventProblemData = (KeptnCloudEventProblemData) eventData;
-                attachment.setColor(getEventResultColor(eventProblemData.getState()));
-            }
-        }
-        attachments.add(attachment);
-
-        return attachments;
-    }
-
-    /**
-     * Creates a list of slack attachments with one attachment with the given list as blocks.
      * Changes the color of the attachment according to the eventResult.
      *
-     * @param eventResult  to set the color accordingly
      * @param layoutBlocks that are added to the attachment
      * @param fallback     of the attachment (e.g. message of notification)
      * @return List<Attachment> with one attachment if successful or else null
      */
-    public static List<Attachment> createSlackAttachment(KeptnCloudEventDataResult eventResult, List<LayoutBlock> layoutBlocks, String fallback) {
+    public static List<Attachment> createSlackAttachment(String barColor, List<LayoutBlock> layoutBlocks, String fallback) {
         List<Attachment> attachments = null;
 
-        if (eventResult != null && layoutBlocks != null && fallback != null) {
+        if (barColor != null && layoutBlocks != null && fallback != null) {
             Attachment attachment = new Attachment();
 
-            attachment.setColor(getEventResultColor(eventResult.getValue()));
+            attachment.setColor(barColor);
             attachment.setBlocks(layoutBlocks);
             attachment.setFallback(fallback);
 
@@ -184,7 +154,13 @@ public class SlackCreator {
         return attachments;
     }
 
-    private static String getEventResultColor(String result) {
+    /**
+     * Returns a hexadecimal color code according to the given event result.
+     * If successful it returns one of three color codes or else null.
+     * @param result of the keptn cloud event
+     * @return hex color code or null
+     */
+    public static String getEventResultColor(String result) {
         String eventResultColor = null;
 
         if (result != null) {
@@ -198,5 +174,39 @@ public class SlackCreator {
         }
 
         return eventResultColor;
+    }
+
+    public static ChatPostMessageRequest createPostRequest(KeptnCloudEvent event, String slackChannel, List<LayoutBlock> layoutBlocks, String fallback) {
+        ChatPostMessageRequest request = null;
+
+        if (event != null && slackChannel != null) {
+            Object eventDataObject = event.getData();
+            String eventResult = null;
+
+            if (eventDataObject instanceof KeptnCloudEventProblemData) {
+                KeptnCloudEventProblemData eventData = (KeptnCloudEventProblemData) eventDataObject;
+                eventResult = eventData.getState();
+            } else if (eventDataObject instanceof  KeptnCloudEventData) {
+                KeptnCloudEventData eventData = (KeptnCloudEventData) eventDataObject;
+                eventResult = Objects.toString(eventData.getResult());
+            }
+
+            String barColor = getEventResultColor(eventResult);
+
+            if (barColor == null) {
+                request = ChatPostMessageRequest.builder()
+                        .channel(slackChannel)
+                        .blocks(layoutBlocks)
+                        .text(fallback)
+                        .build();
+            } else {
+                request = ChatPostMessageRequest.builder()
+                        .channel(slackChannel)
+                        .attachments(createSlackAttachment(barColor, layoutBlocks, fallback))
+                        .build();
+            }
+        }
+
+        return request;
     }
 }

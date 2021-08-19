@@ -72,19 +72,17 @@ public class SlackHandler implements KeptnCloudEventHandler {
             System.err.println(ENV_SLACK_TOKEN + " is null!");
         } else if (channel == null) {
             System.err.println(ENV_SLACK_CHANNEL + " is null!");
+        } else if (event == null) {
+            System.err.println("Keptn Cloud Event is null!");
         } else {
             try {
-                List<LayoutBlock> layoutBlockList = new ArrayList<>();
+                List<LayoutBlock> layoutBlocks = new ArrayList<>();
 
                 for (KeptnCloudEventMapper mapper : mappers) {
-                    layoutBlockList.addAll(mapper.getSpecificData(event));
+                    layoutBlocks.addAll(mapper.getSpecificData(event));
                 }
 
-                List<Attachment> attachments = SlackCreator.createAttachment(event, layoutBlockList, SLACK_NOTIFICATION_MSG);
-                ChatPostMessageRequest request = ChatPostMessageRequest.builder()
-                        .channel(channel)
-                        .attachments(attachments)
-                        .build();
+                ChatPostMessageRequest request = SlackCreator.createPostRequest(event, channel, layoutBlocks, SLACK_NOTIFICATION_MSG);
                 ChatPostMessageResponse response = slack.methods(token).chatPostMessage(request);
 
                 if (response.isOk()) {
@@ -153,6 +151,7 @@ public class SlackHandler implements KeptnCloudEventHandler {
             List<LayoutBlock> newBlocks = new ArrayList<>();
             KeptnCloudEventDataResult approvalFinishedResult = null;
             KeptnCloudEvent approvalTriggered = null;
+            String barColor = null;
 
             if (firstAttachment != null && firstAttachment.getBlocks() != null) {
                 Iterator<LayoutBlock> oldBlocksIterator = firstAttachment.getBlocks().iterator();
@@ -189,6 +188,11 @@ public class SlackHandler implements KeptnCloudEventHandler {
                     approvalFinishedResult = KeptnCloudEventDataResult.FAIL;
                 }
 
+                barColor = SlackCreator.getEventResultColor(approvalFinishedResult.getValue());
+                if (barColor == null && firstAttachment != null) {
+                    barColor = firstAttachment.getColor();
+                }
+
                 try {
                     sendKeptnApprovalFinished(approvalTriggered, approvalFinishedResult);
                 } catch (Exception e) {
@@ -200,7 +204,7 @@ public class SlackHandler implements KeptnCloudEventHandler {
             }
 
             if (!sendEventError) {
-                attachments = SlackCreator.createSlackAttachment(approvalFinishedResult, newBlocks, "updated message");
+                attachments = SlackCreator.createSlackAttachment(barColor, newBlocks, "updated message");
             }
         }
 

@@ -10,7 +10,6 @@ import org.apache.maven.shared.utils.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 public class ReleaseMapper extends KeptnCloudEventMapper {
     private static final KeptnEvent eventName = KeptnEvent.RELEASE;
