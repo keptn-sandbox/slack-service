@@ -1,6 +1,7 @@
 package com.dynatrace.prototype.payloadHandler;
 
 import com.dynatrace.prototype.ApprovalService;
+import com.dynatrace.prototype.SlackMessageSenderService;
 import com.dynatrace.prototype.domainModel.*;
 import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventApprovalData;
 import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventData;
@@ -11,7 +12,6 @@ import com.slack.api.app_backend.interactive_components.payload.BlockActionPaylo
 import com.slack.api.methods.SlackApiException;
 import com.slack.api.methods.request.chat.ChatPostMessageRequest;
 import com.slack.api.methods.request.chat.ChatUpdateRequest;
-import com.slack.api.methods.response.chat.ChatPostMessageResponse;
 import com.slack.api.methods.response.chat.ChatUpdateResponse;
 import com.slack.api.model.Attachment;
 import com.slack.api.model.block.ActionsBlock;
@@ -29,6 +29,10 @@ import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 @ApplicationScoped
 public class SlackHandler implements KeptnCloudEventHandler {
@@ -40,6 +44,8 @@ public class SlackHandler implements KeptnCloudEventHandler {
     private static final String COLOR_FAIL = "#FF0000";
 
     private LinkedHashSet<KeptnCloudEventMapper> mappers;
+    private ConcurrentHashMap<OffsetDateTime, ChatPostMessageRequest> bufferedPostMsgs;
+    private ScheduledExecutorService executor = null;
 
     @Inject
     @RestClient
@@ -47,6 +53,7 @@ public class SlackHandler implements KeptnCloudEventHandler {
 
     public SlackHandler() {
         this.mappers = new LinkedHashSet<>();
+        this.bufferedPostMsgs = new ConcurrentHashMap<>();
 
         mappers.add(new GeneralEventMapper());
         mappers.add(new ProjectMapper());
@@ -59,18 +66,23 @@ public class SlackHandler implements KeptnCloudEventHandler {
         mappers.add(new GetActionMapper());
         mappers.add(new GetSLIMapper());
         mappers.add(new ProblemMapper());
+
+        executor = Executors.newSingleThreadScheduledExecutor();
+        String token = System.getenv(ENV_SLACK_TOKEN);
+
+        if (token == null) {
+            System.err.println(ENV_SLACK_TOKEN + " is null!");
+        } else {
+            executor.scheduleAtFixedRate(new SlackMessageSenderService(bufferedPostMsgs, token), 0, 10000, TimeUnit.MILLISECONDS); //TODO: maybe add a way to configure the interval (period)
+        }
     }
 
     @Override
     public boolean receiveEvent(KeptnCloudEvent event) {
         boolean successful = false;
-        Slack slack = Slack.getInstance();
-        String token = System.getenv(ENV_SLACK_TOKEN);
         String channel = System.getenv(ENV_SLACK_CHANNEL);
 
-        if (token == null) {
-            System.err.println(ENV_SLACK_TOKEN + " is null!");
-        } else if (channel == null) {
+        if (channel == null) {
             System.err.println(ENV_SLACK_CHANNEL + " is null!");
         } else if (event == null) {
             System.err.println("Keptn Cloud Event is null!");
@@ -83,14 +95,12 @@ public class SlackHandler implements KeptnCloudEventHandler {
                 }
 
                 ChatPostMessageRequest request = SlackCreator.createPostRequest(event, channel, layoutBlocks, SLACK_NOTIFICATION_MSG);
-                ChatPostMessageResponse response = slack.methods(token).chatPostMessage(request);
 
-                if (response.isOk()) {
+                if(bufferedPostMsgs.put(OffsetDateTime.parse(event.getTime()), request) != null) {
+                    System.out.println("Post message added!");
                     successful = true;
-                } else {
-                    System.err.println("PAYLOAD_ERROR: " + response.getError());
                 }
-            } catch (IOException | SlackApiException e) {
+            } catch (Exception e) {
                 System.err.println("EXCEPTION: " + e.getMessage());
                 e.printStackTrace();
             }
