@@ -1,8 +1,6 @@
 package com.dynatrace.prototype.payloadCreator;
 
 import com.dynatrace.prototype.domainModel.KeptnCloudEvent;
-import com.dynatrace.prototype.domainModel.KeptnCloudEventDataResult;
-import com.dynatrace.prototype.domainModel.KeptnCloudEventDataStatus;
 import com.dynatrace.prototype.domainModel.KeptnEvent;
 import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventProblemData;
 import com.slack.api.model.block.LayoutBlock;
