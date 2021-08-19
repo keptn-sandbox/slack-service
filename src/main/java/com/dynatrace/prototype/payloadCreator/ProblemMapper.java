@@ -2,15 +2,14 @@ package com.dynatrace.prototype.payloadCreator;
 
 import com.dynatrace.prototype.domainModel.KeptnCloudEvent;
 import com.dynatrace.prototype.domainModel.KeptnCloudEventDataResult;
+import com.dynatrace.prototype.domainModel.KeptnCloudEventDataStatus;
 import com.dynatrace.prototype.domainModel.KeptnEvent;
 import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventProblemData;
 import com.slack.api.model.block.LayoutBlock;
 import com.slack.api.model.block.SectionBlock;
-import org.apache.maven.shared.utils.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 public class ProblemMapper extends KeptnCloudEventMapper {
     private static final KeptnEvent eventName = KeptnEvent.PROBLEM;
@@ -33,7 +32,7 @@ public class ProblemMapper extends KeptnCloudEventMapper {
         if (eventDataObject instanceof KeptnCloudEventProblemData) {
             KeptnCloudEventProblemData eventData = (KeptnCloudEventProblemData) eventDataObject;
             StringBuilder message = new StringBuilder();
-            KeptnCloudEventDataResult result = eventData.getResult();
+            String state = eventData.getState();
             String service = eventData.getService();
             String stage = eventData.getStage();
             String project = eventData.getProject();
@@ -45,7 +44,11 @@ public class ProblemMapper extends KeptnCloudEventMapper {
             } else if (project == null) {
                 System.err.printf(ERROR_NULL_VALUE, "Project", eventName);
             } else {
-                message.append("Add Problem Event message here!"); //TODO: add Problem event message
+                if (KeptnCloudEventProblemData.OPEN.equals(state)) {
+                    message.append("A problem occurred in ").append(String.format(SERVICE_STAGE_PROJECT_TEXT, service, stage, project)).append('!');
+                } else if (KeptnCloudEventProblemData.RESOLVED.equals(state)) {
+                    message.append("Resolved a problem in ").append(String.format(SERVICE_STAGE_PROJECT_TEXT, service, stage, project)).append('!');
+                }
             }
 
             if (message.length() > 0) {

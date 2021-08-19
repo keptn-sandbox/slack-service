@@ -9,8 +9,8 @@ import org.apache.maven.shared.utils.StringUtils;
 import java.util.List;
 
 public abstract class KeptnCloudEventMapper {
-    protected static final String SERVICE_STAGE_PROJECT_TEST = "the service '%1$s' from the stage '%2$s' of the project '%3$s'";
-    private static final String MESSAGE = "%1$s the %2$s of " +String.format(SERVICE_STAGE_PROJECT_TEST, "%3$s", "%4$s", "%5$s");
+    protected static final String SERVICE_STAGE_PROJECT_TEXT = "the service '%1$s' from the stage '%2$s' of the project '%3$s'";
+    private static final String MESSAGE = "%1$s the %2$s of " +String.format(SERVICE_STAGE_PROJECT_TEXT, "%3$s", "%4$s", "%5$s");
     protected static final String ERROR_NULL_VALUE = "%1$s of %2$s is null!";
 
     /**

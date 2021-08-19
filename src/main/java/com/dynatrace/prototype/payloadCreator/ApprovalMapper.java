@@ -68,12 +68,12 @@ public class ApprovalMapper extends KeptnCloudEventMapper {
                 if (KeptnEvent.TRIGGERED.getValue().equals(eventType)) {
                     if (KeptnCloudEventDataResult.PASS.equals(result) && MANUAL.equals(pass) ||
                             KeptnCloudEventDataResult.WARNING.equals(result) && MANUAL.equals(warning)) {
-                        message.append(String.format("Do you want to promote " +SERVICE_STAGE_PROJECT_TEST +"?", service, stage, project));
+                        message.append(String.format("Do you want to promote " + SERVICE_STAGE_PROJECT_TEXT +"?", service, stage, project));
                         manual = true;
                     } else if (KeptnCloudEventDataResult.FAIL.equals(result)) {
-                        message.append(String.format("There was an error when approving " +SERVICE_STAGE_PROJECT_TEST +".", service, stage, project));
+                        message.append(String.format("There was an error when approving " + SERVICE_STAGE_PROJECT_TEXT +".", service, stage, project));
                     } else {
-                        message.append(String.format(StringUtils.capitalise(SERVICE_STAGE_PROJECT_TEST) +" was promoted.", service, stage, project));
+                        message.append(String.format(StringUtils.capitalise(SERVICE_STAGE_PROJECT_TEXT) +" was promoted.", service, stage, project));
                     }
                 } else if (KeptnEvent.STARTED.getValue().equals(eventType)) {
                     message.append(createMessage(result, KeptnEvent.STARTED, eventName, service, stage, project));
