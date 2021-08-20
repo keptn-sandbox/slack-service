@@ -39,13 +39,9 @@ public class SlackHandler implements KeptnCloudEventHandler {
     private static final String ENV_SLACK_TOKEN = "SLACK_TOKEN";
     private static final String ENV_SLACK_CHANNEL = "SLACK_CHANNEL";
     private static final String SLACK_NOTIFICATION_MSG = "A new Keptn Event arrived.";
-    private static final String COLOR_PASS = "#00FF00";
-    private static final String COLOR_WARNING = "#FFFF00";
-    private static final String COLOR_FAIL = "#FF0000";
 
     private LinkedHashSet<KeptnCloudEventMapper> mappers;
     private ConcurrentHashMap<OffsetDateTime, ChatPostMessageRequest> bufferedPostMsgs;
-    private ScheduledExecutorService executor = null;
 
     @Inject
     @RestClient
@@ -67,7 +63,7 @@ public class SlackHandler implements KeptnCloudEventHandler {
         mappers.add(new GetSLIMapper());
         mappers.add(new ProblemMapper());
 
-        executor = Executors.newSingleThreadScheduledExecutor();
+        ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
         String token = System.getenv(ENV_SLACK_TOKEN);
 
         if (token == null) {
@@ -95,10 +91,15 @@ public class SlackHandler implements KeptnCloudEventHandler {
                 }
 
                 ChatPostMessageRequest request = SlackCreator.createPostRequest(event, channel, layoutBlocks, SLACK_NOTIFICATION_MSG);
+                OffsetDateTime requestKey = OffsetDateTime.parse(event.getTime());
 
-                if(bufferedPostMsgs.put(OffsetDateTime.parse(event.getTime()), request) != null) {
+                bufferedPostMsgs.put(requestKey, request);
+
+                if(request.equals(bufferedPostMsgs.get(requestKey))) {
                     System.out.println("Post message added!");
                     successful = true;
+                } else {
+                    System.out.println("Failed to add post message!");
                 }
             } catch (Exception e) {
                 System.err.println("EXCEPTION: " + e.getMessage());
@@ -111,7 +112,6 @@ public class SlackHandler implements KeptnCloudEventHandler {
 
     public boolean sendEvent(Object payload) {
         boolean successful = false;
-
         Slack slack = Slack.getInstance();
         String token = System.getenv(ENV_SLACK_TOKEN);
 

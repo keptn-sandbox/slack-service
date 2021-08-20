@@ -12,24 +12,26 @@ import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class SlackMessageSenderService implements Runnable {
-    private ConcurrentHashMap<OffsetDateTime, ChatPostMessageRequest> bufferedPostMsgs;
+    private final ConcurrentHashMap<OffsetDateTime, ChatPostMessageRequest> bufferedPostMessages;
     private final String slackToken;
 
-    public SlackMessageSenderService(ConcurrentHashMap<OffsetDateTime, ChatPostMessageRequest> bufferedPostMsgs, String slackToken) {
-        this.bufferedPostMsgs = bufferedPostMsgs;
+    public SlackMessageSenderService(ConcurrentHashMap<OffsetDateTime, ChatPostMessageRequest> bufferedPostMessages, String slackToken) {
+        this.bufferedPostMessages = bufferedPostMessages;
         this.slackToken = slackToken;
     }
 
     @Override
     public void run() {
         Slack slack = Slack.getInstance();
-        Iterator<OffsetDateTime> iterator = new TreeSet<>(bufferedPostMsgs.keySet()).iterator();
+        Iterator<OffsetDateTime> keyIterator = new TreeSet<>(bufferedPostMessages.keySet()).iterator(); //due to the TreeSet the times are sorted by the natural order which is ascending so the earliest time is first
 
-
-        while (iterator.hasNext()) {
+        while (keyIterator.hasNext()) {
             try {
-                OffsetDateTime currentKey = iterator.next();
-                ChatPostMessageRequest request = bufferedPostMsgs.get(currentKey);
+                OffsetDateTime currentKey = keyIterator.next();
+                ChatPostMessageRequest request = bufferedPostMessages.get(currentKey);
+
+                bufferedPostMessages.remove(currentKey);
+
                 ChatPostMessageResponse response = slack.methods(slackToken).chatPostMessage(request);
 
                 if (response.isOk()) {
@@ -37,11 +39,10 @@ public class SlackMessageSenderService implements Runnable {
                 } else {
                     System.err.println("PAYLOAD_ERROR: " + response.getError());
                 }
-
-                bufferedPostMsgs.remove(currentKey);
             } catch (IOException | SlackApiException e) {
                 e.printStackTrace();
             }
         }
     }
+
 }
