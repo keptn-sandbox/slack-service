@@ -23,7 +23,7 @@ import static com.slack.api.model.block.composition.BlockCompositions.markdownTe
 public class SlackCreator {
     public static final String SLACK_STYLE_PRIMARY = "primary";
     public static final String SLACK_STYLE_DANGER = "danger";
-    private static final String COLOR_PASS = "#00FF00";
+    private static final String COLOR_PASS = "#00FF00"; //TODO: ask Giovanni if should be configurable and and all methods not static because to configure a constructor is needed
     private static final String COLOR_WARNING = "#FFFF00";
     private static final String COLOR_FAIL = "#FF0000";
 
