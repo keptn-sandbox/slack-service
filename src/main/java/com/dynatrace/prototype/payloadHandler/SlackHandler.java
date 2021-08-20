@@ -38,10 +38,11 @@ import java.util.concurrent.TimeUnit;
 public class SlackHandler implements KeptnCloudEventHandler {
     private static final String ENV_SLACK_TOKEN = "SLACK_TOKEN";
     private static final String ENV_SLACK_CHANNEL = "SLACK_CHANNEL";
+    private static final String ENV_SLACK_MSG_INTERVAL = "SLACK_MSG_INTERVAL_MILLIS";
     private static final String SLACK_NOTIFICATION_MSG = "A new Keptn Event arrived.";
 
     private LinkedHashSet<KeptnCloudEventMapper> mappers;
-    private ConcurrentHashMap<OffsetDateTime, ChatPostMessageRequest> bufferedPostMsgs;
+    private ConcurrentHashMap<OffsetDateTime, ChatPostMessageRequest> bufferedPostMessages;
 
     @Inject
     @RestClient
@@ -49,7 +50,7 @@ public class SlackHandler implements KeptnCloudEventHandler {
 
     public SlackHandler() {
         this.mappers = new LinkedHashSet<>();
-        this.bufferedPostMsgs = new ConcurrentHashMap<>();
+        this.bufferedPostMessages = new ConcurrentHashMap<>();
 
         mappers.add(new GeneralEventMapper());
         mappers.add(new ProjectMapper());
@@ -69,7 +70,22 @@ public class SlackHandler implements KeptnCloudEventHandler {
         if (token == null) {
             System.err.println(ENV_SLACK_TOKEN + " is null!");
         } else {
-            executor.scheduleAtFixedRate(new SlackMessageSenderService(bufferedPostMsgs, token), 0, 10000, TimeUnit.MILLISECONDS); //TODO: maybe add a way to configure the interval (period)
+            String intervalString = System.getenv(ENV_SLACK_MSG_INTERVAL);
+            int interval = 10000; //TODO: better default value in program or env variable with default value in deployment?
+
+            //TODO: Ask Giovanni why this logs are printed twice
+            try {
+                if (intervalString == null) {
+                    System.out.println("Using default interval of 10 seconds for slack post messages.");
+                } else {
+                    interval = Integer.parseInt(intervalString);
+                    System.out.println("Using given interval for slack post messages.");
+                }
+            } catch (NumberFormatException e) {
+                System.err.println(e.getMessage() +"\nDefault interval of 10 seconds for slack post messages provided.");
+            }
+
+            executor.scheduleAtFixedRate(new SlackMessageSenderService(bufferedPostMessages, token), 0, interval, TimeUnit.MILLISECONDS); //TODO: maybe add a way to configure the interval (period)
         }
     }
 
@@ -93,9 +109,9 @@ public class SlackHandler implements KeptnCloudEventHandler {
                 ChatPostMessageRequest request = SlackCreator.createPostRequest(event, channel, layoutBlocks, SLACK_NOTIFICATION_MSG);
                 OffsetDateTime requestKey = OffsetDateTime.parse(event.getTime());
 
-                bufferedPostMsgs.put(requestKey, request);
+                bufferedPostMessages.put(requestKey, request);
 
-                if(request.equals(bufferedPostMsgs.get(requestKey))) {
+                if(request.equals(bufferedPostMessages.get(requestKey))) {
                     System.out.println("Post message added!");
                     successful = true;
                 } else {
