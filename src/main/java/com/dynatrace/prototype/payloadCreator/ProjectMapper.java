@@ -17,7 +17,7 @@ public class ProjectMapper extends KeptnCloudEventMapper {
     public List<LayoutBlock> getSpecificData(KeptnCloudEvent event) {
         List<LayoutBlock> layoutBlockList = new ArrayList<>();
 
-        if (event.getType().startsWith(KeptnEvent.PROJECT.getValue())) {
+        if (KeptnEvent.PROJECT.getValue().equals(event.getTaskName())) {
             layoutBlockList.addAll(getProjectData(event));
         }
 

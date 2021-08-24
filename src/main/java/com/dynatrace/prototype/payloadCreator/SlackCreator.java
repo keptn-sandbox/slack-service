@@ -15,7 +15,6 @@ import com.slack.api.model.block.element.ButtonElement;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.zip.DataFormatException;
 
 import static com.slack.api.model.block.composition.BlockCompositions.markdownText;
 

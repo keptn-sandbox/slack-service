@@ -16,7 +16,7 @@ public class ReleaseMapper extends KeptnCloudEventMapper {
     public List<LayoutBlock> getSpecificData(KeptnCloudEvent event) {
         List<LayoutBlock> layoutBlockList = new ArrayList<>();
 
-        if (event.getType().startsWith(KeptnEvent.RELEASE.getValue())) {
+        if (KeptnEvent.RELEASE.getValue().equals(event.getTaskName())) {
             layoutBlockList.addAll(getReleaseData(event));
         }
 

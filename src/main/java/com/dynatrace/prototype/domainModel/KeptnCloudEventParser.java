@@ -4,6 +4,8 @@ import com.dynatrace.prototype.domainModel.eventData.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.util.HashMap;
+
 public class KeptnCloudEventParser {
 
     public static KeptnCloudEvent parseJsonToKeptnCloudEvent(String jsonString) throws JsonProcessingException {
@@ -22,35 +24,56 @@ public class KeptnCloudEventParser {
     private static boolean parseDataPayload(KeptnCloudEvent event) {
         boolean parsed = true;
         ObjectMapper mapper = new ObjectMapper();
-        String eventType = event.getType();
+        String fullEventType = event.getFullEventType();
+        HashMap<String, String> eventMetaData = KeptnCloudEventValidator.parseSequenceEventType(fullEventType);
 
-        if (eventType.equals(KeptnEvent.PROJECT_TRIGGERED.getValue())) {
-            event.setData(mapper.convertValue(event.getData(), KeptnCloudEventProjectTriggeredData.class));
-        } else if (eventType.startsWith(KeptnEvent.PROJECT.getValue())) { //would also accept project.triggered but that is filtered out above.
-            event.setData(mapper.convertValue(event.getData(), KeptnCloudEventProjectData.class));
-        } else if (eventType.startsWith(KeptnEvent.SERVICE.getValue())) {
-            event.setData(mapper.convertValue(event.getData(), KeptnCloudEventData.class));
-        } else if (eventType.startsWith(KeptnEvent.APPROVAL.getValue())) {
-            event.setData(mapper.convertValue(event.getData(), KeptnCloudEventApprovalData.class));
-        } else if (eventType.startsWith(KeptnEvent.DEPLOYMENT.getValue())) {
-            event.setData(mapper.convertValue(event.getData(), KeptnCloudEventDeploymentData.class));
-        } else if (eventType.startsWith(KeptnEvent.TEST.getValue())) {
-            event.setData(mapper.convertValue(event.getData(), KeptnCloudEventTestData.class));
-        } else if (eventType.startsWith(KeptnEvent.EVALUATION.getValue())) {
-            event.setData(mapper.convertValue(event.getData(), KeptnCloudEventEvaluationData.class));
-        } else if (eventType.startsWith(KeptnEvent.RELEASE.getValue())) {
-            event.setData(mapper.convertValue(event.getData(), KeptnCloudEventReleaseData.class));
-        } else if (eventType.startsWith(KeptnEvent.GET_ACTION.getValue()) || eventType.startsWith(KeptnEvent.ACTION.getValue())) {
-            event.setData(mapper.convertValue(event.getData(), KeptnCloudEventActionData.class));
-        } else if (eventType.startsWith(KeptnEvent.GET_SLI.getValue())) {
-            event.setData(mapper.convertValue(event.getData(), KeptnCloudEventGetSLIData.class));
-        } else if (eventType.contains("problem") || KeptnEvent.PROBLEM.getValue().equals(eventType)) { //TODO: check if Problem events start with sh.keptn.events or without the "s"
-            event.setData(mapper.convertValue(event.getData(), KeptnCloudEventProblemData.class));
-        } /*else if (eventType.startsWith(KeptnEvent.ROLLBACK.getValue())) {
-            //event.setData(mapper.convertValue(event.getData(), KeptnCloudEventRollbackData.class)); TODO: Rollback class
-        } */else {
-            parsed = false;
+        if (eventMetaData != null) {
+            try {
+                event.setData(mapper.convertValue(event.getData(), KeptnCloudEventData.class));
+            } catch (Exception e) {
+                System.err.println(e.getMessage());
+            }
+        } else {
+            eventMetaData = KeptnCloudEventValidator.parseTaskEventType(fullEventType);
+
+            if (eventMetaData != null) {
+                String taskName = eventMetaData.get(KeptnCloudEventValidator.TASK_NAME);
+
+                if (KeptnEvent.PROJECT.getValue().equals(taskName)) {
+                    String eventType = eventMetaData.get((KeptnCloudEventValidator.EVENT_TYPE));
+
+                    if (KeptnEvent.TRIGGERED.getValue().equals(eventType)){
+                        event.setData(mapper.convertValue(event.getData(), KeptnCloudEventProjectTriggeredData.class));
+                    } else {
+                        event.setData(mapper.convertValue(event.getData(), KeptnCloudEventProjectData.class));
+                    }
+                } else if (KeptnEvent.SERVICE.getValue().equals(taskName)) {
+                    event.setData(mapper.convertValue(event.getData(), KeptnCloudEventData.class));
+                } else if (KeptnEvent.APPROVAL.getValue().equals(taskName)) {
+                    event.setData(mapper.convertValue(event.getData(), KeptnCloudEventApprovalData.class));
+                } else if (KeptnEvent.DEPLOYMENT.getValue().equals(taskName)) {
+                    event.setData(mapper.convertValue(event.getData(), KeptnCloudEventDeploymentData.class));
+                } else if (KeptnEvent.TEST.getValue().equals(taskName)) {
+                    event.setData(mapper.convertValue(event.getData(), KeptnCloudEventTestData.class));
+                } else if (KeptnEvent.EVALUATION.getValue().equals(taskName)) {
+                    event.setData(mapper.convertValue(event.getData(), KeptnCloudEventEvaluationData.class));
+                } else if (KeptnEvent.RELEASE.getValue().equals(taskName)) {
+                    event.setData(mapper.convertValue(event.getData(), KeptnCloudEventReleaseData.class));
+                } else if (KeptnEvent.GET_ACTION.getValue().equals(taskName) || KeptnEvent.ACTION.getValue().equals(taskName)) {
+                    event.setData(mapper.convertValue(event.getData(), KeptnCloudEventActionData.class));
+                } else if (KeptnEvent.GET_SLI.getValue().equals(taskName)) {
+                    event.setData(mapper.convertValue(event.getData(), KeptnCloudEventGetSLIData.class));
+                } else if (KeptnEvent.PROBLEM.getValue().equals(taskName)) {
+                    event.setData(mapper.convertValue(event.getData(), KeptnCloudEventProblemData.class));
+                } /*else if (KeptnEvent.ROLLBACK.getValue().equals(taskName)) {
+                    //event.setData(mapper.convertValue(event.getData(), KeptnCloudEventRollbackData.class)); TODO: Rollback class
+                } */else {
+                    parsed = false;
+                }
+            }
         }
+
+        event.setMetaData(eventMetaData);
 
         return parsed;
     }

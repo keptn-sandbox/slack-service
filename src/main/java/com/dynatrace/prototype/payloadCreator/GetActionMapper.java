@@ -16,7 +16,7 @@ public class GetActionMapper extends KeptnCloudEventMapper {
     public List<LayoutBlock> getSpecificData(KeptnCloudEvent event) {
         List<LayoutBlock> layoutBlockList = new ArrayList<>();
 
-        if (event.getType().startsWith(KeptnEvent.GET_ACTION.getValue()) || event.getType().startsWith(KeptnEvent.ACTION.getValue())) {
+        if (KeptnEvent.GET_ACTION.getValue().equals(event.getTaskName()) || KeptnEvent.ACTION.getValue().equals(event.getTaskName())) {
             layoutBlockList.addAll(getActionData(event));
         }
 

@@ -15,9 +15,9 @@ import javax.ws.rs.core.MediaType;
 public interface ApprovalService {
 
     @POST
-    @Path("/events") //TODO: check if it is /events
+    @Path("/event")
     @Consumes("application/cloudevents+json")
-    @Produces(MediaType.TEXT_PLAIN) //TODO: check what it produces
+    @Produces(MediaType.TEXT_PLAIN)
     void sentApprovalFinished(KeptnCloudEvent event);
 
 }
