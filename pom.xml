@@ -85,6 +85,10 @@
       <artifactId>maven-shared-utils</artifactId>
       <version>3.3.3</version>
     </dependency>
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+    </dependency>
   </dependencies>
   <build>
     <plugins>
