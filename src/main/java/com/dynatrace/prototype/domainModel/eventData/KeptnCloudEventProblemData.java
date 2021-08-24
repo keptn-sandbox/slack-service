@@ -22,6 +22,8 @@ public class KeptnCloudEventProblemData extends KeptnCloudEventData {
     private String problemURL;
     @JsonProperty(value = "ImpactedEntity")
     private String impactedEntity;
+    @JsonProperty(value = "ImpactedEntities")
+    private String[] impactedEntities;
     @JsonProperty(value = "Tags")
     private String tags;
 
@@ -51,6 +53,10 @@ public class KeptnCloudEventProblemData extends KeptnCloudEventData {
 
     public String getImpactedEntity() {
         return impactedEntity;
+    }
+
+    public String[] getImpactedEntities() {
+        return impactedEntities;
     }
 
     public String getTags() {
