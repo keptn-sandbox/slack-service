@@ -1,6 +1,9 @@
 package com.dynatrace.prototype.domainModel;
 
+import com.google.common.base.Splitter;
+
 import java.util.HashMap;
+import java.util.List;
 
 public class KeptnCloudEventValidator {
     public static final String STAGE_NAME = "stageName";
@@ -12,6 +15,8 @@ public class KeptnCloudEventValidator {
     private static final String TASK_SERVICE = "service";
     private static final String TASK_CREATE = "create";
 
+    private static final Splitter splitter = Splitter.on('.');
+
     /**
      * Parses the given String into a HashMap with the entries 'stageName', 'sequenceName' and 'eventType' if it is
      * a valid event type.
@@ -20,22 +25,22 @@ public class KeptnCloudEventValidator {
      */
     public static HashMap<String, String> parseSequenceEventType(String sequenceTriggeredEventType) {
         HashMap<String, String> eventMetaData = null;
-        String[] parts = sequenceTriggeredEventType.split("\\.");
+        List<String> parts = splitter.splitToList(sequenceTriggeredEventType);
 
         if (isSequenceEventType(parts)) {
             eventMetaData = new HashMap<>();
-            eventMetaData.put(STAGE_NAME, parts[3]);
-            eventMetaData.put(SEQUENCE_NAME, parts[4]);
-            eventMetaData.put(EVENT_TYPE, parts[5]);
+            eventMetaData.put(STAGE_NAME, parts.get(3));
+            eventMetaData.put(SEQUENCE_NAME, parts.get(4));
+            eventMetaData.put(EVENT_TYPE, parts.get(5));
         }
 
         return eventMetaData;
     }
 
-    private static boolean isSequenceEventType(String[] parts) {
+    private static boolean isSequenceEventType(List<String> parts) {
         boolean result = isValidEventType(parts, 6);
 
-        if ((TASK_PROJECT.equals(parts[3]) || TASK_SERVICE.equals(parts[3])) && TASK_CREATE.equals(parts[4])) {
+        if ((TASK_PROJECT.equals(parts.get(3)) || TASK_SERVICE.equals(parts.get(3))) && TASK_CREATE.equals(parts.get(4))) {
             result = false;
         }
 
@@ -51,22 +56,22 @@ public class KeptnCloudEventValidator {
      */
     public static HashMap<String, String> parseTaskEventType(String sequenceTriggeredEventType) {
         HashMap<String, String> eventMetaData = null;
-        String[] parts = sequenceTriggeredEventType.split("\\.");
+        List<String> parts = splitter.splitToList(sequenceTriggeredEventType);
 
         if (isValidEventType(parts, 4)) {
             eventMetaData = new HashMap<>();
-            eventMetaData.put(TASK_NAME, parts[3]);
+            eventMetaData.put(TASK_NAME, parts.get(3));
 
         } else if (isValidEventType(parts, 5)) {
             eventMetaData = new HashMap<>();
-            eventMetaData.put(TASK_NAME, parts[3]);
-            eventMetaData.put(EVENT_TYPE, parts[4]);
+            eventMetaData.put(TASK_NAME, parts.get(3));
+            eventMetaData.put(EVENT_TYPE, parts.get(4));
 
         } else if (isValidEventType(parts, 6) &&
-                (TASK_PROJECT.equals(parts[3]) || TASK_SERVICE.equals(parts[3])) && TASK_CREATE.equals(parts[4])) {
+                (TASK_PROJECT.equals(parts.get(3)) || TASK_SERVICE.equals(parts.get(3))) && TASK_CREATE.equals(parts.get(4))) {
             eventMetaData = new HashMap<>();
-            eventMetaData.put(TASK_NAME, parts[3] +"." +parts[4]);
-            eventMetaData.put(EVENT_TYPE, parts[5]);
+            eventMetaData.put(TASK_NAME, parts.get(3) +"." +parts.get(4));
+            eventMetaData.put(EVENT_TYPE, parts.get(5));
         }
 
         return eventMetaData;
@@ -78,25 +83,18 @@ public class KeptnCloudEventValidator {
      * @param numOfParts the check size of parts
      * @return true if the parts represent a valid event type or else false
      */
-    private static boolean isValidEventType(String[] parts, int numOfParts) {
-        boolean result = true;
-
-        if (parts.length != numOfParts) {
-            result = false;
+    private static boolean isValidEventType(List<String> parts, int numOfParts) {
+        if (parts.size() != numOfParts) {
+            return false;
         }
 
-        if (result) {
-            int i = 0;
-            while(result && i < parts.length) {
-                if ("".equals(parts[i])) {
-                    result = false;
-                }
-
-                i++;
+        for (String part : parts) {
+            if ("".equals(part)) {
+                return false;
             }
         }
 
-        return result;
+        return true;
     }
 
 }
