@@ -7,7 +7,6 @@ import com.slack.api.methods.response.chat.ChatPostMessageResponse;
 
 import java.io.IOException;
 import java.time.OffsetDateTime;
-import java.util.Iterator;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -23,15 +22,12 @@ public class SlackMessageSenderService implements Runnable {
     @Override
     public void run() {
         Slack slack = Slack.getInstance();
-        Iterator<OffsetDateTime> keyIterator = new TreeSet<>(bufferedPostMessages.keySet()).iterator(); //due to the TreeSet the times are sorted by the natural order which is ascending so the earliest time is first
+        TreeSet<OffsetDateTime> msgKeySet = new TreeSet<>(bufferedPostMessages.keySet()); //due to the TreeSet the times are sorted by the natural order which is ascending so the earliest time is first
 
-        while (keyIterator.hasNext()) {
+        for (OffsetDateTime currentKey : msgKeySet) {
+            ChatPostMessageRequest request = bufferedPostMessages.remove(currentKey);
+
             try {
-                OffsetDateTime currentKey = keyIterator.next();
-                ChatPostMessageRequest request = bufferedPostMessages.get(currentKey);
-
-                bufferedPostMessages.remove(currentKey);
-
                 ChatPostMessageResponse response = slack.methods(slackToken).chatPostMessage(request);
 
                 if (response.isOk()) {
