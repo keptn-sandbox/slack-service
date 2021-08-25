@@ -70,15 +70,15 @@ These variables can be set in the `service.yaml` file, but their name must not b
 
 ### Slack app installation
 
-To use the *notification-service* with Slack a Slack Application has to be created. The app needs the permission to write 
-in chats. To add this permission click `OAuth & Permissions` in the *Features* menu on the left and scroll down to `Scopes`. 
+To use the *notification-service* with Slack a Slack Application has to be created. The app needs write permissions 
+in chats. To add this permission, click `OAuth & Permissions` in the *Features* menu on the left and scroll down to `Scopes`. 
 Add `chat:write` to the *Bot Token Scopes*.
 
 The next step is to install the Slack app to you Slack workspace. This can be done by navigating to `Basic Information` 
 in the *Settings* menu on the left. To install the app click `Install to Workspace` and allow the requested
-permission.
+permissions.
 
-To use the feature with interactive messages navigate to `Interactivity & Shortcuts` in the *Features* menu on the left.
+To use interactive messages, navigate to `Interactivity & Shortcuts` in the *Features* menu on the left.
 Turn `Interactivity` on and add `http://<ip-address>:<port>/quarkus/sendEvent` to the `Request Url` of 
 *Interactivity*. `<ip-address>` and `<port>` have to be the ip and port used to reach the service deployed in your 
 Kubernetes cluster.
