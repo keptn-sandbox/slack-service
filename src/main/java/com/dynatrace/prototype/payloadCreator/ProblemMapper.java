@@ -8,15 +8,15 @@ import com.slack.api.model.block.SectionBlock;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 public class ProblemMapper extends KeptnCloudEventMapper {
+    private static final String eventName = KeptnEvent.PROBLEM.getValue();
 
     @Override
     public List<LayoutBlock> getSpecificData(KeptnCloudEvent event) {
         List<LayoutBlock> layoutBlockList = new ArrayList<>();
 
-        if (KeptnEvent.PROBLEM.getValue().equals(event.getTaskName())) {
+        if (eventName.equals(event.getTaskName())) {
             layoutBlockList.addAll(getProblemData(event));
         }
 
@@ -29,16 +29,27 @@ public class ProblemMapper extends KeptnCloudEventMapper {
 
         if (eventDataObject instanceof KeptnCloudEventProblemData) {
             KeptnCloudEventProblemData eventData = (KeptnCloudEventProblemData) eventDataObject;
-            StringBuilder specificDataSB = new StringBuilder();
+            StringBuilder message = new StringBuilder();
+            String state = eventData.getState();
+            String service = eventData.getService();
+            String stage = eventData.getStage();
+            String project = eventData.getProject();
 
-            specificDataSB.append(ifNotNull("State: ", Objects.toString(eventData.getState()), "\n"));
-            specificDataSB.append(ifNotNull("Problem ID: ", eventData.getProblemID(), "\n"));
-            specificDataSB.append(ifNotNull("Problem Title: ", eventData.getProblemTitle(), "\n"));
-            specificDataSB.append(ifNotNull(null, SlackCreator.formatLink(eventData.getProblemURL(),
-                    "Problem URL"), "\n"));
+            if (!logErrorIfNull(stage, "Stage", eventName) &&
+                !logErrorIfNull(service, "Service", eventName) &&
+                !logErrorIfNull(project, "Project", eventName)) {
 
-            if (specificDataSB.length() > 0) {
-                layoutBlockList.add(SlackCreator.createLayoutBlock(SectionBlock.TYPE, specificDataSB.toString()));
+                if (KeptnCloudEventProblemData.OPEN.equals(state)) {
+                    message.append("A problem occurred in ");
+                } else if (KeptnCloudEventProblemData.RESOLVED.equals(state)) {
+                    message.append("Resolved a problem in ");
+                }
+
+                message.append(String.format(SERVICE_STAGE_PROJECT_TEXT, service, stage, project)).append('!');
+            }
+
+            if (message.length() > 0) {
+                layoutBlockList.add(SlackCreator.createLayoutBlock(SectionBlock.TYPE, message.toString()));
                 layoutBlockList.add(SlackCreator.createDividerBlock());
             }
         } else {

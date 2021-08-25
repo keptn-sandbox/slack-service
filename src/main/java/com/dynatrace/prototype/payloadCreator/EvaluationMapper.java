@@ -1,24 +1,24 @@
 package com.dynatrace.prototype.payloadCreator;
 
 import com.dynatrace.prototype.domainModel.KeptnCloudEvent;
+import com.dynatrace.prototype.domainModel.KeptnCloudEventDataResult;
 import com.dynatrace.prototype.domainModel.KeptnEvent;
-import com.dynatrace.prototype.domainModel.SLIEvaluationResult;
 import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventEvaluationData;
 import com.slack.api.model.block.LayoutBlock;
 import com.slack.api.model.block.SectionBlock;
+import org.apache.maven.shared.utils.StringUtils;
 
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 
 public class EvaluationMapper extends KeptnCloudEventMapper {
+    private static final String eventName = KeptnEvent.EVALUATION.getValue();
 
     @Override
     public List<LayoutBlock> getSpecificData(KeptnCloudEvent event) {
         List<LayoutBlock> layoutBlockList = new ArrayList<>();
 
-        if (KeptnEvent.EVALUATION.getValue().equals(event.getTaskName())) {
+        if (eventName.equals(event.getTaskName())) {
             layoutBlockList.addAll(getEvaluationData(event));
         }
 
@@ -31,34 +31,21 @@ public class EvaluationMapper extends KeptnCloudEventMapper {
 
         if (eventDataObject instanceof KeptnCloudEventEvaluationData) {
             KeptnCloudEventEvaluationData eventData = (KeptnCloudEventEvaluationData) eventDataObject;
-            StringBuilder specificDataSB = new StringBuilder();
+            StringBuilder message = new StringBuilder();
+            KeptnCloudEventDataResult result = eventData.getResult();
+            KeptnEvent eventType = KeptnEvent.valueOf(StringUtils.upperCase(event.getPlainEventType()));
+            String service = eventData.getService();
+            String stage = eventData.getStage();
+            String project = eventData.getProject();
 
-            specificDataSB.append(ifNotNull("Start: ", eventData.getEvaluationStart(), "\t"));
-            specificDataSB.append(ifNotNull("End: ", eventData.getEvaluationEnd(), "\n"));
-            specificDataSB.append(ifNotNull("Result: ", eventData.getEvaluationResult(), "\n"));
-            specificDataSB.append(ifNotNull("Score: ", eventData.getEvaluationScore(), "\n"));
+            logErrorIfNull(stage, "Stage", eventName);
+            logErrorIfNull(service, "Service", eventName);
+            logErrorIfNull(project, "Project", eventName);
 
-            //TODO: message need to be changed
-            HashSet<SLIEvaluationResult> sliResultSet = eventData.getSLIEvaluationResults();
-            if (sliResultSet != null) {
-                Iterator<SLIEvaluationResult> sliResIterator = sliResultSet.iterator();
+            message.append(createMessage(result, eventType, eventName, service, stage, project));
 
-                if (sliResIterator.hasNext()) {
-                    specificDataSB.append("SLI:\n");
-                    specificDataSB.append("Name").append(" | Value").append(" | pass Criteria").append(" | warning Criteria")
-                            .append(" | Result").append(" | Score\n");
-                    while (sliResIterator.hasNext()) {
-                        SLIEvaluationResult element = sliResIterator.next();
-                        specificDataSB.append(element.getDisplayName()).append(" | ").append(element.getValue().getValue())
-                                .append(" | ").append(element.getPassTargets().toString()).append(" | ")
-                                .append(element.getWarningTargets().toString()).append(" | ").append(element.getStatus())
-                                .append(" | ").append(element.getScore()).append("\n");
-                    }
-                }
-            }
-
-            if (specificDataSB.length() > 0) {
-                layoutBlockList.add(SlackCreator.createLayoutBlock(SectionBlock.TYPE, specificDataSB.toString()));
+            if (message.length() > 0) {
+                layoutBlockList.add(SlackCreator.createLayoutBlock(SectionBlock.TYPE, message.toString()));
                 layoutBlockList.add(SlackCreator.createDividerBlock());
             }
         } else {

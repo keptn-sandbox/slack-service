@@ -11,11 +11,14 @@ import com.slack.api.model.block.LayoutBlock;
 import com.slack.api.model.block.SectionBlock;
 import com.slack.api.model.block.composition.ConfirmationDialogObject;
 import com.slack.api.model.block.element.BlockElement;
+import org.apache.maven.shared.utils.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class ApprovalMapper extends KeptnCloudEventMapper {
+    private static final String eventName = KeptnEvent.APPROVAL.getValue();
+
     private static final String MANUAL = "manual";
     private static final String AUTOMATIC = "automatic";
 
@@ -32,7 +35,7 @@ public class ApprovalMapper extends KeptnCloudEventMapper {
     public List<LayoutBlock> getSpecificData(KeptnCloudEvent event) {
         List<LayoutBlock> layoutBlockList = new ArrayList<>();
 
-        if (KeptnEvent.APPROVAL.getValue().equals(event.getTaskName())) {
+        if (eventName.equals(event.getTaskName())) {
             layoutBlockList.addAll(getApprovalData(event));
         }
 
@@ -47,55 +50,39 @@ public class ApprovalMapper extends KeptnCloudEventMapper {
             KeptnCloudEventApprovalData eventData = (KeptnCloudEventApprovalData) eventDataObject;
             StringBuilder message = new StringBuilder();
             boolean manual = false;
-            KeptnCloudEventDataResult result = eventData.getResult();
             String pass = eventData.getApprovalPass();
             String warning = eventData.getApprovalWarning();
+            KeptnCloudEventDataResult result = eventData.getResult();
+            String eventType = event.getPlainEventType();
             String service = eventData.getService();
-            String project = eventData.getProject();
             String stage = eventData.getStage();
+            String project = eventData.getProject();
 
-            if (stage == null) {
-                System.err.println("Stage of approval is null!");
-            } else if (service == null) {
-                System.err.println("Service of approval is null!");
-            } else if (project == null) {
-                System.err.println("Project of approval is null!");
-            } else {
-                if (KeptnCloudEventDataResult.PASS.equals(result) && MANUAL.equals(pass) ||
-                        KeptnCloudEventDataResult.WARNING.equals(result) && MANUAL.equals(warning)) {
-                    message.append(String.format("Do you want to promote from stage '%1$s' the service '%2$s' of the project '%3$s'?", stage, service, project));
-                    manual = true;
-                } else if (KeptnCloudEventDataResult.FAIL.equals(result)) {
-                    message.append(String.format("There was an error when approving the service '%1$s' from stage '%2$s' of the project '%3$s'.", service, stage, project));
-                } else {
-                    message.append(String.format("The service '%1$s' from stage '%2$s' of the project '%3$s' was promoted.", service, stage, project));
+            if (!logErrorIfNull(stage, "Stage", eventName) &&
+                !logErrorIfNull(service, "Service", eventName) &&
+                !logErrorIfNull(project, "Project", eventName)) {
+
+                if (KeptnEvent.TRIGGERED.getValue().equals(eventType)) {
+                    if (KeptnCloudEventDataResult.PASS.equals(result) && MANUAL.equals(pass) ||
+                            KeptnCloudEventDataResult.WARNING.equals(result) && MANUAL.equals(warning)) {
+                        message.append(String.format("Do you want to promote " + SERVICE_STAGE_PROJECT_TEXT + "?", service, stage, project));
+                        manual = true;
+                    } else if (KeptnCloudEventDataResult.FAIL.equals(result)) {
+                        message.append(String.format("There was an error when approving " + SERVICE_STAGE_PROJECT_TEXT + ".", service, stage, project));
+                    } else {
+                        message.append(String.format(StringUtils.capitalise(SERVICE_STAGE_PROJECT_TEXT) + " was promoted.", service, stage, project));
+                    }
+                } else if (KeptnEvent.STARTED.getValue().equals(eventType)) {
+                    message.append(createMessage(result, KeptnEvent.STARTED, eventName, service, stage, project));
+                } else if (KeptnEvent.FINISHED.getValue().equals(eventType)) {
+                    message.append(createMessage(result, KeptnEvent.FINISHED, eventName, service, stage, project));
                 }
             }
 
             if (message.length() > 0) {
                 layoutBlockList.add(SlackCreator.createLayoutBlock(SectionBlock.TYPE, message.toString()));
                 if (manual) {
-                    List<BlockElement> buttons = new ArrayList<>();
-                    ConfirmationDialogObject confirmationApprove = SlackCreator.createConfirmationDialog(CONFIRM_TITLE,
-                            String.format(CONFIRM_TEXT, APPROVAL_APPROVE_VALUE), CONFIRM_YES, CONFIRM_NO,
-                            SlackCreator.SLACK_STYLE_PRIMARY);
-                    ConfirmationDialogObject confirmationDeny = SlackCreator.createConfirmationDialog(CONFIRM_TITLE,
-                            String.format(CONFIRM_TEXT, APPROVAL_DENY_VALUE), CONFIRM_YES, CONFIRM_NO,
-                            SlackCreator.SLACK_STYLE_DANGER);
-
-                    try {
-                        //TODO: maybe improve how the event is sent to make the payload smaller
-                        ObjectMapper mapper = new ObjectMapper();
-
-                        buttons.add(SlackCreator.createButton(APPROVAL_APPROVE_ID, APPROVAL_APPROVE_VALUE,
-                                mapper.writeValueAsString(event), SlackCreator.SLACK_STYLE_PRIMARY, confirmationApprove));
-                        buttons.add(SlackCreator.createButton(APPROVAL_DENY_ID, APPROVAL_DENY_VALUE, null,
-                                SlackCreator.SLACK_STYLE_DANGER, confirmationDeny));
-                    } catch (JsonProcessingException e) {
-                        e.printStackTrace();
-                    }
-
-                    layoutBlockList.add(SlackCreator.createLayoutBlock(ActionsBlock.TYPE, buttons));
+                    layoutBlockList.add(createApprovalButtons(event));
                 }
                 layoutBlockList.add(SlackCreator.createDividerBlock());
             }
@@ -104,5 +91,29 @@ public class ApprovalMapper extends KeptnCloudEventMapper {
         }
 
         return layoutBlockList;
+    }
+
+    private LayoutBlock createApprovalButtons(KeptnCloudEvent event) {
+        List<BlockElement> buttons = new ArrayList<>();
+        ConfirmationDialogObject confirmationApprove = SlackCreator.createConfirmationDialog(CONFIRM_TITLE,
+                String.format(CONFIRM_TEXT, APPROVAL_APPROVE_VALUE), CONFIRM_YES, CONFIRM_NO,
+                SlackCreator.SLACK_STYLE_PRIMARY);
+        ConfirmationDialogObject confirmationDeny = SlackCreator.createConfirmationDialog(CONFIRM_TITLE,
+                String.format(CONFIRM_TEXT, APPROVAL_DENY_VALUE), CONFIRM_YES, CONFIRM_NO,
+                SlackCreator.SLACK_STYLE_DANGER);
+
+        try {
+            //TODO: maybe improve how the event is sent to make the payload smaller
+            ObjectMapper mapper = new ObjectMapper();
+
+            buttons.add(SlackCreator.createButton(APPROVAL_APPROVE_ID, APPROVAL_APPROVE_VALUE,
+                    mapper.writeValueAsString(event), SlackCreator.SLACK_STYLE_PRIMARY, confirmationApprove));
+            buttons.add(SlackCreator.createButton(APPROVAL_DENY_ID, APPROVAL_DENY_VALUE, null,
+                    SlackCreator.SLACK_STYLE_DANGER, confirmationDeny));
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+
+        return SlackCreator.createLayoutBlock(ActionsBlock.TYPE, buttons);
     }
 }
