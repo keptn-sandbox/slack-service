@@ -12,13 +12,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ReleaseMapper extends KeptnCloudEventMapper {
-    private static final KeptnEvent eventName = KeptnEvent.RELEASE;
+    private static final String eventName = KeptnEvent.RELEASE.getValue();
 
     @Override
     public List<LayoutBlock> getSpecificData(KeptnCloudEvent event) {
         List<LayoutBlock> layoutBlockList = new ArrayList<>();
 
-        if (eventName.getValue().equals(event.getTaskName())) {
+        if (eventName.equals(event.getTaskName())) {
             layoutBlockList.addAll(getReleaseData(event));
         }
 
@@ -38,15 +38,11 @@ public class ReleaseMapper extends KeptnCloudEventMapper {
             String stage = eventData.getStage();
             String project = eventData.getProject();
 
-            if (stage == null) {
-                System.err.printf(ERROR_NULL_VALUE, "Stage", eventName);
-            } else if (service == null) {
-                System.err.printf(ERROR_NULL_VALUE, "Service", eventName);
-            } else if (project == null) {
-                System.err.printf(ERROR_NULL_VALUE, "Project", eventName);
-            } else {
-                message.append(createMessage(result, eventType, eventName, service, stage, project));
-            }
+            logErrorIfNull(stage, "Stage", eventName);
+            logErrorIfNull(service, "Service", eventName);
+            logErrorIfNull(project, "Project", eventName);
+
+            message.append(createMessage(result, eventType, eventName, service, stage, project));
 
             if (message.length() > 0) {
                 layoutBlockList.add(SlackCreator.createLayoutBlock(SectionBlock.TYPE, message.toString()));

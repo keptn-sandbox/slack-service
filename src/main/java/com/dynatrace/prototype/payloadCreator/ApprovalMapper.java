@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ApprovalMapper extends KeptnCloudEventMapper {
-    private static final KeptnEvent eventName = KeptnEvent.APPROVAL;
+    private static final String eventName = KeptnEvent.APPROVAL.getValue();
 
     private static final String MANUAL = "manual";
     private static final String AUTOMATIC = "automatic";
@@ -35,7 +35,7 @@ public class ApprovalMapper extends KeptnCloudEventMapper {
     public List<LayoutBlock> getSpecificData(KeptnCloudEvent event) {
         List<LayoutBlock> layoutBlockList = new ArrayList<>();
 
-        if (eventName.getValue().equals(event.getTaskName())) {
+        if (eventName.equals(event.getTaskName())) {
             layoutBlockList.addAll(getApprovalData(event));
         }
 
@@ -58,22 +58,19 @@ public class ApprovalMapper extends KeptnCloudEventMapper {
             String stage = eventData.getStage();
             String project = eventData.getProject();
 
-            if (stage == null) {
-                System.err.printf(ERROR_NULL_VALUE, "Stage", eventName);
-            } else if (service == null) {
-                System.err.printf(ERROR_NULL_VALUE, "Service", eventName);
-            } else if (project == null) {
-                System.err.printf(ERROR_NULL_VALUE, "Project", eventName);
-            } else {
+            if (!logErrorIfNull(stage, "Stage", eventName) &&
+                !logErrorIfNull(service, "Service", eventName) &&
+                !logErrorIfNull(project, "Project", eventName)) {
+
                 if (KeptnEvent.TRIGGERED.getValue().equals(eventType)) {
                     if (KeptnCloudEventDataResult.PASS.equals(result) && MANUAL.equals(pass) ||
                             KeptnCloudEventDataResult.WARNING.equals(result) && MANUAL.equals(warning)) {
-                        message.append(String.format("Do you want to promote " + SERVICE_STAGE_PROJECT_TEXT +"?", service, stage, project));
+                        message.append(String.format("Do you want to promote " + SERVICE_STAGE_PROJECT_TEXT + "?", service, stage, project));
                         manual = true;
                     } else if (KeptnCloudEventDataResult.FAIL.equals(result)) {
-                        message.append(String.format("There was an error when approving " + SERVICE_STAGE_PROJECT_TEXT +".", service, stage, project));
+                        message.append(String.format("There was an error when approving " + SERVICE_STAGE_PROJECT_TEXT + ".", service, stage, project));
                     } else {
-                        message.append(String.format(StringUtils.capitalise(SERVICE_STAGE_PROJECT_TEXT) +" was promoted.", service, stage, project));
+                        message.append(String.format(StringUtils.capitalise(SERVICE_STAGE_PROJECT_TEXT) + " was promoted.", service, stage, project));
                     }
                 } else if (KeptnEvent.STARTED.getValue().equals(eventType)) {
                     message.append(createMessage(result, KeptnEvent.STARTED, eventName, service, stage, project));

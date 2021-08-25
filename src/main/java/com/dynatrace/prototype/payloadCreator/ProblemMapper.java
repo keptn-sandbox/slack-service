@@ -10,13 +10,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ProblemMapper extends KeptnCloudEventMapper {
-    private static final KeptnEvent eventName = KeptnEvent.PROBLEM;
+    private static final String eventName = KeptnEvent.PROBLEM.getValue();
 
     @Override
     public List<LayoutBlock> getSpecificData(KeptnCloudEvent event) {
         List<LayoutBlock> layoutBlockList = new ArrayList<>();
 
-        if (eventName.getValue().equals(event.getTaskName())) {
+        if (eventName.equals(event.getTaskName())) {
             layoutBlockList.addAll(getProblemData(event));
         }
 
@@ -35,18 +35,17 @@ public class ProblemMapper extends KeptnCloudEventMapper {
             String stage = eventData.getStage();
             String project = eventData.getProject();
 
-            if (stage == null) {
-                System.err.printf(ERROR_NULL_VALUE, "Stage", eventName);
-            } else if (service == null) {
-                System.err.printf(ERROR_NULL_VALUE, "Service", eventName);
-            } else if (project == null) {
-                System.err.printf(ERROR_NULL_VALUE, "Project", eventName);
-            } else {
+            if (!logErrorIfNull(stage, "Stage", eventName) &&
+                !logErrorIfNull(service, "Service", eventName) &&
+                !logErrorIfNull(project, "Project", eventName)) {
+
                 if (KeptnCloudEventProblemData.OPEN.equals(state)) {
-                    message.append("A problem occurred in ").append(String.format(SERVICE_STAGE_PROJECT_TEXT, service, stage, project)).append('!');
+                    message.append("A problem occurred in ");
                 } else if (KeptnCloudEventProblemData.RESOLVED.equals(state)) {
-                    message.append("Resolved a problem in ").append(String.format(SERVICE_STAGE_PROJECT_TEXT, service, stage, project)).append('!');
+                    message.append("Resolved a problem in ");
                 }
+
+                message.append(String.format(SERVICE_STAGE_PROJECT_TEXT, service, stage, project)).append('!');
             }
 
             if (message.length() > 0) {

@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class GetActionMapper extends KeptnCloudEventMapper {
-    private static KeptnEvent eventName = KeptnEvent.ACTION;
+    private static String eventName = KeptnEvent.ACTION.getValue();
 
     @Override
     public List<LayoutBlock> getSpecificData(KeptnCloudEvent event) {
@@ -21,7 +21,7 @@ public class GetActionMapper extends KeptnCloudEventMapper {
         if (KeptnEvent.ACTION.getValue().equals(event.getTaskName())) {
             layoutBlockList.addAll(getActionData(event));
         } else if (KeptnEvent.GET_ACTION.getValue().equals(event.getTaskName())) {
-            eventName = KeptnEvent.GET_ACTION;
+            eventName = KeptnEvent.GET_ACTION.getValue();
             layoutBlockList.addAll(getActionData(event));
         }
 
@@ -41,15 +41,11 @@ public class GetActionMapper extends KeptnCloudEventMapper {
             String stage = eventData.getStage();
             String project = eventData.getProject();
 
-            if (stage == null) {
-                System.err.printf(ERROR_NULL_VALUE, "Stage", eventName);
-            } else if (service == null) {
-                System.err.printf(ERROR_NULL_VALUE, "Service", eventName);
-            } else if (project == null) {
-                System.err.printf(ERROR_NULL_VALUE, "Project", eventName);
-            } else {
-                message.append(createMessage(result, eventType, eventName, service, stage, project));
-            }
+            logErrorIfNull(stage, "Stage", eventName);
+            logErrorIfNull(service, "Service", eventName);
+            logErrorIfNull(project, "Project", eventName);
+
+            message.append(createMessage(result, eventType, eventName, service, stage, project));
 
             if (message.length() > 0) {
                 layoutBlockList.add(SlackCreator.createLayoutBlock(SectionBlock.TYPE, message.toString()));

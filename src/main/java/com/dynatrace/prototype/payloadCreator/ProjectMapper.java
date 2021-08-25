@@ -12,13 +12,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ProjectMapper extends KeptnCloudEventMapper {
-    private static final KeptnEvent eventName = KeptnEvent.PROJECT;
+    private static final String eventName = KeptnEvent.PROJECT.getValue();
 
     @Override
     public List<LayoutBlock> getSpecificData(KeptnCloudEvent event) {
         List<LayoutBlock> layoutBlockList = new ArrayList<>();
 
-        if (eventName.getValue().equals(event.getTaskName())) {
+        if (eventName.equals(event.getTaskName())) {
             layoutBlockList.addAll(getProjectData(event));
         }
 
@@ -46,6 +46,7 @@ public class ProjectMapper extends KeptnCloudEventMapper {
                     specificDataSB.append(ifNotNull("There was an error creating the project '", projectName, "' !"));
                 }
             }
+
             if (specificDataSB.length() > 0) {
                 layoutBlockList.add(SlackCreator.createLayoutBlock(SectionBlock.TYPE, specificDataSB.toString()));
                 layoutBlockList.add(SlackCreator.createDividerBlock());

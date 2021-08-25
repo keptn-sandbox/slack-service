@@ -11,13 +11,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ServiceMapper extends KeptnCloudEventMapper {
-    private static final KeptnEvent eventName = KeptnEvent.SERVICE;
+    private static final String eventName = KeptnEvent.SERVICE.getValue();
 
     @Override
     public List<LayoutBlock> getSpecificData(KeptnCloudEvent event) {
         List<LayoutBlock> layoutBlockList = new ArrayList<>();
 
-        if (eventName.getValue().equals(event.getTaskName())) {
+        if (eventName.equals(event.getTaskName())) {
             layoutBlockList.addAll(getServiceData(event));
         }
 

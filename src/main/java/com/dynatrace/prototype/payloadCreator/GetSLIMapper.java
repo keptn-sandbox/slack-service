@@ -12,13 +12,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class GetSLIMapper extends KeptnCloudEventMapper {
-    private static final KeptnEvent eventName = KeptnEvent.GET_SLI;
+    private static final String eventName = KeptnEvent.GET_SLI.getValue();
 
     @Override
     public List<LayoutBlock> getSpecificData(KeptnCloudEvent event) {
         List<LayoutBlock> layoutBlockList = new ArrayList<>();
 
-        if (eventName.getValue().equals(event.getTaskName())) {
+        if (eventName.equals(event.getTaskName())) {
             layoutBlockList.addAll(getSLIData(event));
         }
 
@@ -38,15 +38,11 @@ public class GetSLIMapper extends KeptnCloudEventMapper {
             String stage = eventData.getStage();
             String project = eventData.getProject();
 
-            if (stage == null) {
-                System.err.printf(ERROR_NULL_VALUE, "Stage", eventName);
-            } else if (service == null) {
-                System.err.printf(ERROR_NULL_VALUE, "Service", eventName);
-            } else if (project == null) {
-                System.err.printf(ERROR_NULL_VALUE, "Project", eventName);
-            } else {
-                message.append(createMessage(result, eventType, eventName, service, stage, project));
-            }
+            logErrorIfNull(stage, "Stage", eventName);
+            logErrorIfNull(service, "Service", eventName);
+            logErrorIfNull(project, "Project", eventName);
+
+            message.append(createMessage(result, eventType, eventName, service, stage, project));
 
             if (message.length() > 0) {
                 layoutBlockList.add(SlackCreator.createLayoutBlock(SectionBlock.TYPE, message.toString()));
