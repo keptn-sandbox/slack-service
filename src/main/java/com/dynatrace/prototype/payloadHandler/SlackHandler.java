@@ -23,8 +23,8 @@ import com.slack.api.model.block.element.BlockElement;
 import com.slack.api.model.block.element.ButtonElement;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 
-import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.inject.Singleton;
 import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
@@ -34,7 +34,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-@ApplicationScoped
+@Singleton
 public class SlackHandler implements KeptnCloudEventHandler {
     private static final String ENV_SLACK_TOKEN = "SLACK_TOKEN";
     private static final String ENV_SLACK_CHANNEL = "SLACK_CHANNEL";
@@ -71,9 +71,8 @@ public class SlackHandler implements KeptnCloudEventHandler {
             System.err.println(ENV_SLACK_TOKEN + " is null!");
         } else {
             String intervalString = System.getenv(ENV_SLACK_MSG_INTERVAL);
-            int interval = 10000; //TODO: better default value in program or env variable with default value in deployment?
+            int interval = 10000;
 
-            //TODO: Ask Giovanni why this logs are printed twice
             try {
                 if (intervalString == null) {
                     System.out.println("Using default interval of 10 seconds for slack post messages.");
@@ -85,7 +84,7 @@ public class SlackHandler implements KeptnCloudEventHandler {
                 System.err.println(e.getMessage() +"\nDefault interval of 10 seconds for slack post messages provided.");
             }
 
-            executor.scheduleAtFixedRate(new SlackMessageSenderService(bufferedPostMessages, token), 0, interval, TimeUnit.MILLISECONDS); //TODO: maybe add a way to configure the interval (period)
+            executor.scheduleAtFixedRate(new SlackMessageSenderService(bufferedPostMessages, token), 0, interval, TimeUnit.MILLISECONDS);
         }
     }
 
