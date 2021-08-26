@@ -18,8 +18,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import static com.slack.api.model.block.composition.BlockCompositions.markdownText;
-
 public class SlackCreator {
     public static final String SLACK_STYLE_PRIMARY = "primary";
     public static final String SLACK_STYLE_DANGER = "danger";
@@ -71,7 +69,7 @@ public class SlackCreator {
         if (SectionBlock.TYPE.equals(type)) {
             if (payload instanceof String) {
                 String message = payload.toString();
-                slackBlock = Blocks.section(section -> section.text(markdownText(message)));
+                slackBlock = SectionBlock.builder().text(MarkdownTextObject.builder().text(message).build()).build();
             }
         } else if (HeaderBlock.TYPE.equals(type)) {
             if (payload instanceof String) {
