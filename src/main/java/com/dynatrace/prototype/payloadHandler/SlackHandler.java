@@ -1,6 +1,7 @@
 package com.dynatrace.prototype.payloadHandler;
 
 import com.dynatrace.prototype.ApprovalService;
+import com.dynatrace.prototype.SlackMessageSenderService;
 import com.dynatrace.prototype.domainModel.*;
 import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventApprovalData;
 import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventData;
@@ -11,7 +12,6 @@ import com.slack.api.app_backend.interactive_components.payload.BlockActionPaylo
 import com.slack.api.methods.SlackApiException;
 import com.slack.api.methods.request.chat.ChatPostMessageRequest;
 import com.slack.api.methods.request.chat.ChatUpdateRequest;
-import com.slack.api.methods.response.chat.ChatPostMessageResponse;
 import com.slack.api.methods.response.chat.ChatUpdateResponse;
 import com.slack.api.model.Attachment;
 import com.slack.api.model.block.ActionsBlock;
@@ -23,23 +23,26 @@ import com.slack.api.model.block.element.BlockElement;
 import com.slack.api.model.block.element.ButtonElement;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 
-import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.inject.Singleton;
 import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
-@ApplicationScoped
+@Singleton
 public class SlackHandler implements KeptnCloudEventHandler {
     private static final String ENV_SLACK_TOKEN = "SLACK_TOKEN";
     private static final String ENV_SLACK_CHANNEL = "SLACK_CHANNEL";
+    private static final String ENV_SLACK_MSG_INTERVAL = "SLACK_MSG_INTERVAL_MILLIS";
     private static final String SLACK_NOTIFICATION_MSG = "A new Keptn Event arrived.";
-    private static final String COLOR_PASS = "#00FF00";
-    private static final String COLOR_WARNING = "#FFFF00";
-    private static final String COLOR_FAIL = "#FF0000";
 
     private LinkedHashSet<KeptnCloudEventMapper> mappers;
+    private ConcurrentHashMap<OffsetDateTime, ChatPostMessageRequest> bufferedPostMessages;
 
     @Inject
     @RestClient
@@ -47,6 +50,7 @@ public class SlackHandler implements KeptnCloudEventHandler {
 
     public SlackHandler() {
         this.mappers = new LinkedHashSet<>();
+        this.bufferedPostMessages = new ConcurrentHashMap<>();
 
         mappers.add(new GeneralEventMapper());
         mappers.add(new ProjectMapper());
@@ -59,18 +63,37 @@ public class SlackHandler implements KeptnCloudEventHandler {
         mappers.add(new GetActionMapper());
         mappers.add(new GetSLIMapper());
         mappers.add(new ProblemMapper());
+
+        ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+        String token = System.getenv(ENV_SLACK_TOKEN);
+
+        if (token == null) {
+            System.err.println(ENV_SLACK_TOKEN + " is null!");
+        } else {
+            String intervalString = System.getenv(ENV_SLACK_MSG_INTERVAL);
+            int interval = 10000;
+
+            try {
+                if (intervalString == null) {
+                    System.out.println("Using default interval of 10 seconds for slack post messages.");
+                } else {
+                    interval = Integer.parseInt(intervalString);
+                    System.out.println("Using given interval for slack post messages.");
+                }
+            } catch (NumberFormatException e) {
+                System.err.println(e.getMessage() +"\nDefault interval of 10 seconds for slack post messages provided.");
+            }
+
+            executor.scheduleAtFixedRate(new SlackMessageSenderService(bufferedPostMessages, token), 0, interval, TimeUnit.MILLISECONDS);
+        }
     }
 
     @Override
     public boolean receiveEvent(KeptnCloudEvent event) {
         boolean successful = false;
-        Slack slack = Slack.getInstance();
-        String token = System.getenv(ENV_SLACK_TOKEN);
         String channel = System.getenv(ENV_SLACK_CHANNEL);
 
-        if (token == null) {
-            System.err.println(ENV_SLACK_TOKEN + " is null!");
-        } else if (channel == null) {
+        if (channel == null) {
             System.err.println(ENV_SLACK_CHANNEL + " is null!");
         } else if (event == null) {
             System.err.println("Keptn Cloud Event is null!");
@@ -83,14 +106,17 @@ public class SlackHandler implements KeptnCloudEventHandler {
                 }
 
                 ChatPostMessageRequest request = SlackCreator.createPostRequest(event, channel, layoutBlocks, SLACK_NOTIFICATION_MSG);
-                ChatPostMessageResponse response = slack.methods(token).chatPostMessage(request);
+                OffsetDateTime requestKey = OffsetDateTime.parse(event.getTime());
 
-                if (response.isOk()) {
+                bufferedPostMessages.put(requestKey, request);
+
+                if(request.equals(bufferedPostMessages.get(requestKey))) {
+                    System.out.println("Post message added!");
                     successful = true;
                 } else {
-                    System.err.println("PAYLOAD_ERROR: " + response.getError());
+                    System.out.println("Failed to add post message!");
                 }
-            } catch (IOException | SlackApiException e) {
+            } catch (Exception e) {
                 System.err.println("EXCEPTION: " + e.getMessage());
                 e.printStackTrace();
             }
@@ -101,7 +127,6 @@ public class SlackHandler implements KeptnCloudEventHandler {
 
     public boolean sendEvent(Object payload) {
         boolean successful = false;
-
         Slack slack = Slack.getInstance();
         String token = System.getenv(ENV_SLACK_TOKEN);
 
@@ -272,7 +297,7 @@ public class SlackHandler implements KeptnCloudEventHandler {
                         KeptnEvent.APPROVAL, KeptnEvent.FINISHED, approvalTriggered.getDatacontenttype(), approvalFinishedData,
                         approvalTriggered.getShkeptncontext(), approvalTriggered.getId(),
                         OffsetDateTime.now().format(DateTimeFormatter.ISO_ZONED_DATE_TIME));
-
+                
                 approvalService.sentApprovalFinished(eventFinished);
             }
         }

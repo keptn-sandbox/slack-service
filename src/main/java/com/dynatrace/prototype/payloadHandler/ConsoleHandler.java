@@ -2,9 +2,9 @@ package com.dynatrace.prototype.payloadHandler;
 
 import com.dynatrace.prototype.domainModel.KeptnCloudEvent;
 
-import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Singleton;
 
-@ApplicationScoped
+@Singleton
 public class ConsoleHandler implements KeptnCloudEventHandler {
     @Override
     public boolean receiveEvent(KeptnCloudEvent event) {
