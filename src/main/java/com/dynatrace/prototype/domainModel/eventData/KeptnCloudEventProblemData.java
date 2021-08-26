@@ -1,9 +1,11 @@
 package com.dynatrace.prototype.domainModel.eventData;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.LinkedHashMap;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class KeptnCloudEventProblemData extends KeptnCloudEventData {
     public static final String OPEN = "OPEN";
     public static final String RESOLVED = "RESOLVED";
@@ -23,7 +25,7 @@ public class KeptnCloudEventProblemData extends KeptnCloudEventData {
     @JsonProperty(value = "ImpactedEntity")
     private String impactedEntity;
     @JsonProperty(value = "ImpactedEntities")
-    private String[] impactedEntities;
+    private Object[] impactedEntities;
     @JsonProperty(value = "Tags")
     private String tags;
 
@@ -55,7 +57,7 @@ public class KeptnCloudEventProblemData extends KeptnCloudEventData {
         return impactedEntity;
     }
 
-    public String[] getImpactedEntities() {
+    public Object[] getImpactedEntities() {
         return impactedEntities;
     }
 
