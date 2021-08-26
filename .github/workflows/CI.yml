@@ -1,0 +1,58 @@
+# This workflow will build a package using Maven and then publish it to GitHub packages when a release is created
+# For more information see: https://github.com/actions/setup-java/blob/main/docs/advanced-usage.md#apache-maven-with-a-settings-path
+
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  maven_package:
+    name: Maven Package
+    runs-on: ubuntu-20.04
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v2.3.4
+
+    - name: Load CI Environment from .ci_env
+      id: load_ci_env
+      uses: c-py/action-dotenv-to-setenv@v3
+      with:
+        env-file: .ci_env
+    
+    - name: Set up JDK 11
+      uses: actions/setup-java@v2
+      with:
+        java-version: '11'
+        distribution: 'adopt'
+        server-id: github # Value of the distributionManagement/repository/id field of the pom.xml
+        settings-path: ${{ github.workspace }} # location for the settings.xml file
+
+    - name: Build with Maven
+      run: mvn -B package --file pom.xml
+
+    - id: docker_login
+      name: Docker Login
+      # only run docker login on pushes; also for PRs, but only if this is not a fork
+      if: (github.event_name == 'push') || (github.event.pull_request.head.repo.full_name == github.repository)
+      # note: GH does not allow to access secrets for PRs from a forked repositories due to security reasons
+      # that's fine, but it means we can't push images to dockerhub
+      uses: docker/login-action@v1.9.0
+      with:
+        username: ${{ secrets.REGISTRY_USER }}
+        password: ${{ secrets.REGISTRY_PASSWORD }}
+
+    - name: Assign release version from version.properties to Env variable
+      run: cat version.properties >> $GITHUB_ENV
+
+    - id: docker_build
+      name: Docker Build
+      run: docker build -f src/main/docker/Dockerfile.jvm -t "${{ env.DOCKER_ORGANIZATION }}/${{ env.IMAGE }}:${{ env.VERSION }}" .
+
+    - name: Push the Docker image
+      run: docker push "${{ env.DOCKER_ORGANIZATION }}/${{ env.IMAGE }}:${{ env.VERSION }}"
