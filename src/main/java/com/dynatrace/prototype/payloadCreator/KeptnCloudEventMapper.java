@@ -5,10 +5,12 @@ import com.dynatrace.prototype.domainModel.KeptnCloudEventDataResult;
 import com.dynatrace.prototype.domainModel.KeptnEvent;
 import com.slack.api.model.block.LayoutBlock;
 import org.apache.maven.shared.utils.StringUtils;
+import org.jboss.logging.Logger;
 
 import java.util.List;
 
 public abstract class KeptnCloudEventMapper {
+    private static final Logger LOG = Logger.getLogger(KeptnCloudEventMapper.class);
     protected static final String SERVICE_STAGE_PROJECT_TEXT = "the service *'%1$s'* from the stage *'%2$s'* of the project *'%3$s'*";
     private static final String MESSAGE = "*%1$s* the *%2$s* of " + String.format(SERVICE_STAGE_PROJECT_TEXT, "%3$s", "%4$s", "%5$s");
     protected static final String ERROR_NULL_VALUE = "%1$s of %2$s is null!";
@@ -91,7 +93,7 @@ public abstract class KeptnCloudEventMapper {
         boolean isNull = false;
 
         if (value == null) {
-            System.err.printf(ERROR_NULL_VALUE, valueName, eventName);
+            LOG.errorf(ERROR_NULL_VALUE, valueName, eventName);
             isNull = true;
         }
 

@@ -113,7 +113,7 @@ public class ApprovalMapper extends KeptnCloudEventMapper {
             buttons.add(SlackCreator.createButton(APPROVAL_DENY_ID, APPROVAL_DENY_VALUE, null,
                     SlackCreator.SLACK_STYLE_DANGER, confirmationDeny));
         } catch (JsonProcessingException e) {
-            e.printStackTrace();
+            LOG.error("An exception occurred while parsing an event to JSON!", e);
         }
 
         return SlackCreator.createLayoutBlock(ActionsBlock.TYPE, buttons);

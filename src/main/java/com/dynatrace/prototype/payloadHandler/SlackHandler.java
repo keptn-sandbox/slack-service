@@ -9,7 +9,6 @@ import com.dynatrace.prototype.payloadCreator.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.slack.api.Slack;
 import com.slack.api.app_backend.interactive_components.payload.BlockActionPayload;
-import com.slack.api.methods.SlackApiException;
 import com.slack.api.methods.request.chat.ChatPostMessageRequest;
 import com.slack.api.methods.request.chat.ChatUpdateRequest;
 import com.slack.api.methods.response.chat.ChatUpdateResponse;
@@ -22,10 +21,10 @@ import com.slack.api.model.block.composition.MarkdownTextObject;
 import com.slack.api.model.block.element.BlockElement;
 import com.slack.api.model.block.element.ButtonElement;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
+import org.jboss.logging.Logger;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -36,6 +35,8 @@ import java.util.concurrent.TimeUnit;
 
 @Singleton
 public class SlackHandler implements KeptnCloudEventHandler {
+    private static final Logger LOG = Logger.getLogger(SlackHandler.class);
+
     private static final String ENV_SLACK_TOKEN = "SLACK_TOKEN";
     private static final String ENV_SLACK_CHANNEL = "SLACK_CHANNEL";
     private static final String ENV_SLACK_MSG_INTERVAL = "SLACK_MSG_INTERVAL_MILLIS";
@@ -68,20 +69,20 @@ public class SlackHandler implements KeptnCloudEventHandler {
         String token = System.getenv(ENV_SLACK_TOKEN);
 
         if (token == null) {
-            System.err.println(ENV_SLACK_TOKEN + " is null!");
+            LOG.error(ENV_SLACK_TOKEN + " is null!");
         } else {
             String intervalString = System.getenv(ENV_SLACK_MSG_INTERVAL);
             int interval = 10000;
 
             try {
                 if (intervalString == null) {
-                    System.out.println("Using default interval of 10 seconds for slack post messages.");
+                    LOG.info("Using default interval of 10 seconds for slack post messages.");
                 } else {
                     interval = Integer.parseInt(intervalString);
-                    System.out.println("Using given interval for slack post messages.");
+                    LOG.info("Using given interval for slack post messages.");
                 }
             } catch (NumberFormatException e) {
-                System.err.println(e.getMessage() +"\nDefault interval of 10 seconds for slack post messages provided.");
+                LOG.error("Default interval of 10 seconds for slack post messages provided.", e);
             }
 
             executor.scheduleAtFixedRate(new SlackMessageSenderService(bufferedPostMessages, token), 0, interval, TimeUnit.MILLISECONDS);
@@ -94,31 +95,30 @@ public class SlackHandler implements KeptnCloudEventHandler {
         String channel = System.getenv(ENV_SLACK_CHANNEL);
 
         if (channel == null) {
-            System.err.println(ENV_SLACK_CHANNEL + " is null!");
+            LOG.error(ENV_SLACK_CHANNEL + " is null!");
         } else if (event == null) {
-            System.err.println("Keptn Cloud Event is null!");
+            LOG.error("KeptnCloudEvent is null!");
         } else {
+            List<LayoutBlock> layoutBlocks = new ArrayList<>();
+
+            for (KeptnCloudEventMapper mapper : mappers) {
+                layoutBlocks.addAll(mapper.getSpecificData(event));
+            }
+
             try {
-                List<LayoutBlock> layoutBlocks = new ArrayList<>();
-
-                for (KeptnCloudEventMapper mapper : mappers) {
-                    layoutBlocks.addAll(mapper.getSpecificData(event));
-                }
-
                 ChatPostMessageRequest request = SlackCreator.createPostRequest(event, channel, layoutBlocks, SLACK_NOTIFICATION_MSG);
                 OffsetDateTime requestKey = OffsetDateTime.parse(event.getTime());
 
                 bufferedPostMessages.put(requestKey, request);
 
                 if(request.equals(bufferedPostMessages.get(requestKey))) {
-                    System.out.println("Post message added!");
+                    LOG.info("Post message added!");
                     successful = true;
                 } else {
-                    System.out.println("Failed to add post message!");
+                    LOG.info("Failed to add post message!");
                 }
             } catch (Exception e) {
-                System.err.println("EXCEPTION: " + e.getMessage());
-                e.printStackTrace();
+                LOG.error("An exception occurred while receiving an event!", e);
             }
         }
 
@@ -145,14 +145,11 @@ public class SlackHandler implements KeptnCloudEventHandler {
                 if (response.isOk()) {
                     successful = true;
                 } else {
-                    System.err.println("PAYLOAD_ERROR: " + response.getError());
+                    LOG.error("PAYLOAD_ERROR: " + response.getError());
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (SlackApiException e) {
-                e.printStackTrace();
+            } catch (Exception e) {
+                LOG.error("An exception occurred while updating a Slack message!", e);
             }
-
         }
 
         return successful;
@@ -221,7 +218,7 @@ public class SlackHandler implements KeptnCloudEventHandler {
                 try {
                     sendKeptnApprovalFinished(approvalTriggered, approvalFinishedResult);
                 } catch (Exception e) {
-                    System.err.println(e.getMessage());
+                    LOG.error("An exception occurred while sending the approval.finished event!", e);
                     sendEventError = true;
                 }
 
@@ -266,7 +263,7 @@ public class SlackHandler implements KeptnCloudEventHandler {
                 try {
                     result = KeptnCloudEventParser.parseJsonToKeptnCloudEvent(eventButton.getValue());
                 } catch (JsonProcessingException e) {
-                    e.printStackTrace();
+                    LOG.error("An exception occurred while parsing JSON to an event!");
                 }
             }
         }
