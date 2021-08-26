@@ -7,12 +7,14 @@ import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventEvaluationDa
 import com.slack.api.model.block.LayoutBlock;
 import com.slack.api.model.block.SectionBlock;
 import org.apache.maven.shared.utils.StringUtils;
+import org.jboss.logging.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class EvaluationMapper extends KeptnCloudEventMapper {
     private static final String eventName = KeptnEvent.EVALUATION.getValue();
+    private static final Logger LOG = Logger.getLogger(EvaluationMapper.class);
 
     @Override
     public List<LayoutBlock> getSpecificData(KeptnCloudEvent event) {
@@ -49,7 +51,7 @@ public class EvaluationMapper extends KeptnCloudEventMapper {
                 layoutBlockList.add(SlackCreator.createDividerBlock());
             }
         } else {
-            System.out.println("WARN: eventData is not an instance of KeptnCloudEventEvaluationData although the event type is \"Evaluation\"!");
+            LOG.warnf(WARNING_EVENT_DATA, KeptnCloudEventEvaluationData.class, eventName);
         }
 
         return layoutBlockList;

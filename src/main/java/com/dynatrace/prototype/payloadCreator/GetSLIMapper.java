@@ -7,12 +7,14 @@ import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventGetSLIData;
 import com.slack.api.model.block.LayoutBlock;
 import com.slack.api.model.block.SectionBlock;
 import org.apache.maven.shared.utils.StringUtils;
+import org.jboss.logging.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class GetSLIMapper extends KeptnCloudEventMapper {
     private static final String eventName = KeptnEvent.GET_SLI.getValue();
+    private static final Logger LOG = Logger.getLogger(GetSLIMapper.class);
 
     @Override
     public List<LayoutBlock> getSpecificData(KeptnCloudEvent event) {
@@ -49,7 +51,7 @@ public class GetSLIMapper extends KeptnCloudEventMapper {
                 layoutBlockList.add(SlackCreator.createDividerBlock());
             }
         } else {
-            System.out.println("WARN: eventData is not an instance of KeptnCloudEventGetSLIData although the event type is \"Get-Sli\"!");
+            LOG.warnf(WARNING_EVENT_DATA, KeptnCloudEventGetSLIData.class, eventName);
         }
 
         return layoutBlockList;

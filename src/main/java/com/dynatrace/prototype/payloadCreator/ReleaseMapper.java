@@ -7,12 +7,14 @@ import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventReleaseData;
 import com.slack.api.model.block.LayoutBlock;
 import com.slack.api.model.block.SectionBlock;
 import org.apache.maven.shared.utils.StringUtils;
+import org.jboss.logging.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class ReleaseMapper extends KeptnCloudEventMapper {
     private static final String eventName = KeptnEvent.RELEASE.getValue();
+    private static final Logger LOG = Logger.getLogger(ReleaseMapper.class);
 
     @Override
     public List<LayoutBlock> getSpecificData(KeptnCloudEvent event) {
@@ -49,7 +51,7 @@ public class ReleaseMapper extends KeptnCloudEventMapper {
                 layoutBlockList.add(SlackCreator.createDividerBlock());
             }
         } else {
-            System.out.println("WARN: eventData is not an instance of KeptnCloudEventReleaseData although the event type is \"Release\"!");
+            LOG.warnf(WARNING_EVENT_DATA, KeptnCloudEventReleaseData.class, eventName);
         }
 
         return layoutBlockList;

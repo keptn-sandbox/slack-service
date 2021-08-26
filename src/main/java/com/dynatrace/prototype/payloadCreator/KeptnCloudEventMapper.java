@@ -12,6 +12,7 @@ public abstract class KeptnCloudEventMapper {
     protected static final String SERVICE_STAGE_PROJECT_TEXT = "the service *'%1$s'* from the stage *'%2$s'* of the project *'%3$s'*";
     private static final String MESSAGE = "*%1$s* the *%2$s* of " + String.format(SERVICE_STAGE_PROJECT_TEXT, "%3$s", "%4$s", "%5$s");
     protected static final String ERROR_NULL_VALUE = "%1$s of %2$s is null!";
+    protected static final String WARNING_EVENT_DATA = "EventData is not an instance of '%1$s' although the event type is '%2$s'!";
 
     /**
      * Returns the specific (relevant / important) data of the given KeptnCloudEvent in a list of LayoutBlock(s).

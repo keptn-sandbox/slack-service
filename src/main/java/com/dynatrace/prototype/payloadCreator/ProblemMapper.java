@@ -5,12 +5,14 @@ import com.dynatrace.prototype.domainModel.KeptnEvent;
 import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventProblemData;
 import com.slack.api.model.block.LayoutBlock;
 import com.slack.api.model.block.SectionBlock;
+import org.jboss.logging.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class ProblemMapper extends KeptnCloudEventMapper {
     private static final String eventName = KeptnEvent.PROBLEM.getValue();
+    private static final Logger LOG = Logger.getLogger(ProblemMapper.class);
 
     @Override
     public List<LayoutBlock> getSpecificData(KeptnCloudEvent event) {
@@ -53,7 +55,7 @@ public class ProblemMapper extends KeptnCloudEventMapper {
                 layoutBlockList.add(SlackCreator.createDividerBlock());
             }
         } else {
-            System.out.println("WARN: eventData is not an instance of KeptnCloudEventProblemData although the event type is \"Problem\"!");
+            LOG.warnf(WARNING_EVENT_DATA, KeptnCloudEventProblemData.class, eventName);
         }
 
         return layoutBlockList;
