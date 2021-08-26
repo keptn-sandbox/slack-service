@@ -79,7 +79,7 @@ public class SlackHandler implements KeptnCloudEventHandler {
                     LOG.info("Using default interval of 10 seconds for slack post messages.");
                 } else {
                     interval = Integer.parseInt(intervalString);
-                    LOG.info("Using given interval for slack post messages.");
+                    LOG.info("Using given interval of " + intervalString + " milliseconds for slack post messages.");
                 }
             } catch (NumberFormatException e) {
                 LOG.error("Default interval of 10 seconds for slack post messages provided.", e);
