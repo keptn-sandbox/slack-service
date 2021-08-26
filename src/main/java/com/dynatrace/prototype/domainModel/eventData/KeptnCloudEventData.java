@@ -2,12 +2,15 @@ package com.dynatrace.prototype.domainModel.eventData;
 
 import com.dynatrace.prototype.domainModel.KeptnCloudEventDataResult;
 import com.dynatrace.prototype.domainModel.KeptnCloudEventDataStatus;
+import org.jboss.logging.Logger;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Objects;
 
 public class KeptnCloudEventData {
+    private static final Logger LOG = Logger.getLogger(KeptnCloudEventData.class);
+
     private String project;
     private String service;
     private String stage;
@@ -73,7 +76,7 @@ public class KeptnCloudEventData {
                 i++;
             }
         } else {
-            System.out.println("WARN: Cannot perform linkedHashMap.get() when it is null or empty!");
+            LOG.warn("Cannot perform linkedHashMap.get() when it is null or empty!");
         }
 
         return result;

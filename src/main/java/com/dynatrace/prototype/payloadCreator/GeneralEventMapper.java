@@ -6,11 +6,13 @@ import com.slack.api.model.block.HeaderBlock;
 import com.slack.api.model.block.LayoutBlock;
 import com.slack.api.model.block.SectionBlock;
 import org.apache.maven.shared.utils.StringUtils;
+import org.jboss.logging.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class GeneralEventMapper extends KeptnCloudEventMapper {
+    private static final Logger LOG = Logger.getLogger(GeneralEventMapper.class);
     private static final String ENV_KEPTN_BRIDGE_DOMAIN = "KEPTN_BRIDGE_DOMAIN";
     private static final String APP_LAYER_PROTOCOL = "http";
     private static final String KEPTN_BRIDGE_NAME = "Keptn bridge";
@@ -43,7 +45,7 @@ public class GeneralEventMapper extends KeptnCloudEventMapper {
 
         String keptnBridgeDomain = System.getenv(ENV_KEPTN_BRIDGE_DOMAIN);
         if (keptnBridgeDomain == null) {
-            System.err.println(ENV_KEPTN_BRIDGE_DOMAIN +" is null!");
+            LOG.error(ENV_KEPTN_BRIDGE_DOMAIN +" is null!");
         } else {
             Object eventDataObject = event.getData();
 

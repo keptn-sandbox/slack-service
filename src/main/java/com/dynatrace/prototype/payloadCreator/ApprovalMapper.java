@@ -12,12 +12,14 @@ import com.slack.api.model.block.SectionBlock;
 import com.slack.api.model.block.composition.ConfirmationDialogObject;
 import com.slack.api.model.block.element.BlockElement;
 import org.apache.maven.shared.utils.StringUtils;
+import org.jboss.logging.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class ApprovalMapper extends KeptnCloudEventMapper {
     private static final String eventName = KeptnEvent.APPROVAL.getValue();
+    private static final Logger LOG = Logger.getLogger(ApprovalMapper.class);
 
     private static final String MANUAL = "manual";
     private static final String AUTOMATIC = "automatic";
@@ -87,7 +89,7 @@ public class ApprovalMapper extends KeptnCloudEventMapper {
                 layoutBlockList.add(SlackCreator.createDividerBlock());
             }
         } else {
-            System.out.println("WARN: eventData is not an instance of KeptnCloudEventApprovalData although the event type is \"Approval\"!");
+            LOG.warnf(WARNING_EVENT_DATA, KeptnCloudEventApprovalData.class, eventName);
         }
 
         return layoutBlockList;
@@ -111,7 +113,7 @@ public class ApprovalMapper extends KeptnCloudEventMapper {
             buttons.add(SlackCreator.createButton(APPROVAL_DENY_ID, APPROVAL_DENY_VALUE, null,
                     SlackCreator.SLACK_STYLE_DANGER, confirmationDeny));
         } catch (JsonProcessingException e) {
-            e.printStackTrace();
+            LOG.error("An exception occurred while parsing an event to JSON!", e);
         }
 
         return SlackCreator.createLayoutBlock(ActionsBlock.TYPE, buttons);

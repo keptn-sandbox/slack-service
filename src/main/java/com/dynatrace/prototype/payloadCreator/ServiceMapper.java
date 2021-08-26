@@ -6,12 +6,14 @@ import com.dynatrace.prototype.domainModel.KeptnEvent;
 import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventData;
 import com.slack.api.model.block.LayoutBlock;
 import com.slack.api.model.block.SectionBlock;
+import org.jboss.logging.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class ServiceMapper extends KeptnCloudEventMapper {
     private static final String eventName = KeptnEvent.SERVICE.getValue();
+    private static final Logger LOG = Logger.getLogger(ServiceMapper.class);
 
     @Override
     public List<LayoutBlock> getSpecificData(KeptnCloudEvent event) {
@@ -46,7 +48,8 @@ public class ServiceMapper extends KeptnCloudEventMapper {
                 layoutBlockList.add(SlackCreator.createDividerBlock());
             }
         } else {
-            System.out.println("WARN: eventData is not an instance of KeptnCloudEventData although the event type is \"Service\"! (service has no specific data class)");
+            LOG.warnf(WARNING_EVENT_DATA, KeptnCloudEventData.class, eventName);
+            LOG.warn("(service has no specific data class)");
         }
 
         return layoutBlockList;

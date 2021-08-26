@@ -4,6 +4,7 @@ import com.dynatrace.prototype.domainModel.KeptnCloudEventDataResult;
 import com.dynatrace.prototype.domainModel.KeptnCloudEventSLIResult;
 import com.dynatrace.prototype.domainModel.KeptnCloudEventSLITarget;
 import com.dynatrace.prototype.domainModel.SLIEvaluationResult;
+import org.jboss.logging.Logger;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -11,6 +12,8 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 
 public class KeptnCloudEventEvaluationData extends KeptnCloudEventData {
+    private static final Logger LOG = Logger.getLogger(KeptnCloudEventEvaluationData.class);
+
     private static final String EVALUATION_RESULT = "result";
     private static final String EVALUATION_SCORE = "score";
     private static final String EVALUATION_GIT_COMMIT = "gitCommit";
@@ -99,13 +102,12 @@ public class KeptnCloudEventEvaluationData extends KeptnCloudEventData {
 
                         sliEvaluationResults.add(new SLIEvaluationResult(name, score, value, passTargets, warningTargets, status));
                     } catch (Exception e) {
-                        System.err.println(e.getMessage());
-                        System.err.println("ERROR: Could not create SLIEvaluationResult out of the payload!");
+                        LOG.error("Could not create SLIEvaluationResult out of the payload!", e);
                     }
                 }
             }
         } else {
-            System.out.println("WARN: Cannot perform linkedHashMap.get() when it is null!");
+            LOG.warn("Cannot perform linkedHashMap.get() when it is null!");
         }
 
         return sliEvaluationResults;
@@ -129,12 +131,12 @@ public class KeptnCloudEventEvaluationData extends KeptnCloudEventData {
 
                         sliTargets.add(new KeptnCloudEventSLITarget(criteria, targetValue, violated));
                     } catch (Exception e) {
-                        System.err.println("ERROR: At lease one values of the sliTarget has the wrong type!");
+                        LOG.error("At lease one values of the sliTarget has the wrong type!", e);
                     }
                 }
             }
         } else {
-            System.out.println("WARN: Cannot perform linkedHashMap.get() when it is null");
+            LOG.warn("Cannot perform linkedHashMap.get() when it is null");
         }
 
         return sliTargets;

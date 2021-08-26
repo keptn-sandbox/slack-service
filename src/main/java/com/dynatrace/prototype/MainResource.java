@@ -8,6 +8,7 @@ import com.google.gson.Gson;
 import com.slack.api.app_backend.interactive_components.payload.BlockActionPayload;
 import com.slack.api.app_backend.util.JsonPayloadExtractor;
 import com.slack.api.util.json.GsonFactory;
+import org.jboss.logging.Logger;
 
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
@@ -18,6 +19,7 @@ import javax.ws.rs.core.MediaType;
 
 @Path("/quarkus")
 public class MainResource {
+    private static final Logger LOG = Logger.getLogger(MainResource.class);
 
     @Inject
     private KeptnCloudEventHandler keptnCloudEventHandler;
@@ -36,7 +38,7 @@ public class MainResource {
                 result = "Received event successfully!";
             }
         } catch (JsonProcessingException e) {
-            System.err.println(e.getMessage());
+            LOG.error("An exception occurred while handling an event from Keptn!", e);
         }
 
         return result;
@@ -58,7 +60,7 @@ public class MainResource {
                 result = "Send event successfully!";
             }
         } catch (Exception e) {
-            System.err.println(e.getMessage());
+            LOG.error("An exception occurred while sending an event to Keptn!", e);
         }
 
         return result;

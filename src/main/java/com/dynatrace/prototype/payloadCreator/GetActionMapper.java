@@ -7,12 +7,14 @@ import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventActionData;
 import com.slack.api.model.block.LayoutBlock;
 import com.slack.api.model.block.SectionBlock;
 import org.apache.maven.shared.utils.StringUtils;
+import org.jboss.logging.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class GetActionMapper extends KeptnCloudEventMapper {
     private static String eventName = KeptnEvent.ACTION.getValue();
+    private static final Logger LOG = Logger.getLogger(GetActionMapper.class);
 
     @Override
     public List<LayoutBlock> getSpecificData(KeptnCloudEvent event) {
@@ -52,7 +54,7 @@ public class GetActionMapper extends KeptnCloudEventMapper {
                 layoutBlockList.add(SlackCreator.createDividerBlock());
             }
         } else {
-            System.out.println("WARN: eventData is not an instance of KeptnCloudEventActionData although the event type is \"Action / Get-Action\"!");
+            LOG.warnf(WARNING_EVENT_DATA, KeptnCloudEventActionData.class, eventName);
         }
 
         return layoutBlockList;

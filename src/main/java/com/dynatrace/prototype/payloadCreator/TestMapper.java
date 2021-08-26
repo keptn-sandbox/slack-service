@@ -7,12 +7,14 @@ import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventTestData;
 import com.slack.api.model.block.LayoutBlock;
 import com.slack.api.model.block.SectionBlock;
 import org.apache.maven.shared.utils.StringUtils;
+import org.jboss.logging.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class TestMapper extends KeptnCloudEventMapper {
     private static final String eventName = KeptnEvent.TEST.getValue();
+    private static final Logger LOG = Logger.getLogger(TestMapper.class);
     
     @Override
     public List<LayoutBlock> getSpecificData(KeptnCloudEvent event) {
@@ -49,7 +51,7 @@ public class TestMapper extends KeptnCloudEventMapper {
                 layoutBlockList.add(SlackCreator.createDividerBlock());
             }
         } else {
-            System.out.println("WARN: eventData is not an instance of KeptnCloudEventTestData although the event type is \"Test\"!");
+            LOG.warnf(WARNING_EVENT_DATA, KeptnCloudEventTestData.class, eventName);
         }
 
         return layoutBlockList;

@@ -3,19 +3,21 @@ package com.dynatrace.prototype.domainModel;
 import com.dynatrace.prototype.domainModel.eventData.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.jboss.logging.Logger;
 
 import java.util.HashMap;
 
 public class KeptnCloudEventParser {
+    private static final Logger LOG = Logger.getLogger(KeptnCloudEventParser.class);
 
     public static KeptnCloudEvent parseJsonToKeptnCloudEvent(String jsonString) throws JsonProcessingException {
         ObjectMapper objectMapper = new ObjectMapper(); //TODO: maybe use only one mapper because it is thread-save
         KeptnCloudEvent result = objectMapper.readValue(jsonString, KeptnCloudEvent.class);
 
         if (parseDataPayload(result)) {
-            System.out.println("Parsed event data value successfully.");
+            LOG.info("Parsed event data value successfully.");
         } else {
-            System.out.println("WARN: Failed to pass event data value (general parsing provided).");
+            LOG.warn("Failed to pass event data value (general parsing provided).");
         }
 
         return result;
@@ -31,7 +33,7 @@ public class KeptnCloudEventParser {
             try {
                 event.setData(mapper.convertValue(event.getData(), KeptnCloudEventData.class));
             } catch (Exception e) {
-                System.err.println(e.getMessage());
+                LOG.error("An exception occurred while parsing the data payload!", e);
             }
         } else {
             eventMetaData = KeptnCloudEventValidator.parseTaskEventType(fullEventType);
