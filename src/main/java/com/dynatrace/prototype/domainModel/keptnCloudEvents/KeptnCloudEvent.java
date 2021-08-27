@@ -1,5 +1,7 @@
-package com.dynatrace.prototype.domainModel;
+package com.dynatrace.prototype.domainModel.keptnCloudEvents;
 
+import com.dynatrace.prototype.domainModel.KeptnCloudEventValidator;
+import com.dynatrace.prototype.domainModel.KeptnEvent;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -7,7 +9,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.HashMap;
 
-public class KeptnCloudEvent {
+public abstract class KeptnCloudEvent {
     private String specversion;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private String id;
@@ -18,7 +20,6 @@ public class KeptnCloudEvent {
     private HashMap<String, String> metaData; //includes 'stageName', 'sequenceName' and 'eventType' or 'taskName' and 'eventType'
     @JsonAlias("contenttype")
     private String datacontenttype;
-    private Object data; //LinkedHashMap after 1. parsing, subclass of KeptnCloudEventData after 2. parsing
     private String shkeptncontext;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private String shkeptnspecversion;
@@ -29,13 +30,12 @@ public class KeptnCloudEvent {
     public KeptnCloudEvent() {}
 
     public KeptnCloudEvent(String id, String specversion, String source, KeptnEvent taskName, KeptnEvent eventType,
-                           String datacontenttype, Object data, String shkeptncontext, String triggeredid, String time) {
+                           String datacontenttype, String shkeptncontext, String triggeredid, String time) {
         this.id = id;
         this.specversion = specversion;
         this.source = source;
         this.fullEventType = KeptnEvent.SH_KEPTN_EVENT.getValue() + "." + taskName.getValue() + "." + eventType.getValue();
         this.datacontenttype = datacontenttype;
-        this.data = data;
         this.shkeptncontext = shkeptncontext;
         this.triggeredid = triggeredid;
         this.time = time;
@@ -120,11 +120,4 @@ public class KeptnCloudEvent {
         return time;
     }
 
-    public Object getData() {
-        return data;
-    }
-
-    public void setData(Object data) {
-        this.data = data;
-    }
 }
