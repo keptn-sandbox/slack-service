@@ -2,11 +2,17 @@ package com.dynatrace.prototype.payloadHandler;
 
 import com.dynatrace.prototype.ApprovalService;
 import com.dynatrace.prototype.SlackMessageSenderService;
-import com.dynatrace.prototype.domainModel.*;
+import com.dynatrace.prototype.domainModel.KeptnCloudEventDataResult;
+import com.dynatrace.prototype.domainModel.KeptnCloudEventDataStatus;
+import com.dynatrace.prototype.domainModel.KeptnCloudEventParser;
+import com.dynatrace.prototype.domainModel.KeptnEvent;
 import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventApprovalData;
 import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventData;
+import com.dynatrace.prototype.domainModel.keptnCloudEvents.KeptnCloudEvent;
+import com.dynatrace.prototype.domainModel.keptnCloudEvents.KeptnCloudEventApproval;
+import com.dynatrace.prototype.domainModel.keptnCloudEvents.KeptnCloudEventDefault;
 import com.dynatrace.prototype.payloadCreator.*;
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.gson.JsonSyntaxException;
 import com.slack.api.Slack;
 import com.slack.api.app_backend.interactive_components.payload.BlockActionPayload;
 import com.slack.api.methods.request.chat.ChatPostMessageRequest;
@@ -172,7 +178,7 @@ public class SlackHandler implements KeptnCloudEventHandler {
             Attachment firstAttachment = payload.getMessage().getAttachments().get(0);
             List<LayoutBlock> newBlocks = new ArrayList<>();
             KeptnCloudEventDataResult approvalFinishedResult = null;
-            KeptnCloudEvent approvalTriggered = null;
+            KeptnCloudEventApproval approvalTriggered = null;
             String barColor = null;
 
             if (firstAttachment != null && firstAttachment.getBlocks() != null) {
@@ -195,7 +201,10 @@ public class SlackHandler implements KeptnCloudEventHandler {
                     }
                 }
 
-                approvalTriggered = extractKeptnCloudEvent(firstActions);
+                KeptnCloudEvent keptnCloudEvent = extractKeptnCloudEvent(firstActions);
+                if (keptnCloudEvent instanceof KeptnCloudEventApproval) {
+                    approvalTriggered = (KeptnCloudEventApproval) keptnCloudEvent;
+                }
             }
 
             if (payload.getActions() != null) {
@@ -262,7 +271,7 @@ public class SlackHandler implements KeptnCloudEventHandler {
             if (eventButton != null) {
                 try {
                     result = KeptnCloudEventParser.parseJsonToKeptnCloudEvent(eventButton.getValue());
-                } catch (JsonProcessingException e) {
+                } catch (JsonSyntaxException e) {
                     LOG.error("An exception occurred while parsing JSON to an event!");
                 }
             }
@@ -278,22 +287,20 @@ public class SlackHandler implements KeptnCloudEventHandler {
      * @param approvalTriggered out of which the approval.finished is created
      * @param approvalResult    of the approval.finished event
      */
-    private void sendKeptnApprovalFinished(KeptnCloudEvent approvalTriggered, KeptnCloudEventDataResult approvalResult) {
+    private void sendKeptnApprovalFinished(KeptnCloudEventApproval approvalTriggered, KeptnCloudEventDataResult approvalResult) {
         if (approvalTriggered != null && approvalResult != null) {
-            Object approvalTriggeredDataObject = approvalTriggered.getData();
+            KeptnCloudEventApprovalData approvalTriggeredData = approvalTriggered.getData();
 
-            if (approvalTriggeredDataObject instanceof KeptnCloudEventApprovalData) {
-                KeptnCloudEventApprovalData approvalTriggeredData = (KeptnCloudEventApprovalData) approvalTriggeredDataObject;
-
+            if (approvalTriggeredData != null) {
                 KeptnCloudEventData approvalFinishedData = new KeptnCloudEventData(approvalTriggeredData.getProject(),
                         approvalTriggeredData.getService(), approvalTriggeredData.getStage(), approvalTriggeredData.getLabels(),
                         "", KeptnCloudEventDataStatus.SUCCEEDED, approvalResult);
 
-                KeptnCloudEvent eventFinished = new KeptnCloudEvent(Objects.toString(UUID.randomUUID()),
+                KeptnCloudEventDefault eventFinished = new KeptnCloudEventDefault(Objects.toString(UUID.randomUUID()),
                         approvalTriggered.getSpecversion(), approvalTriggered.getSource(),
-                        KeptnEvent.APPROVAL, KeptnEvent.FINISHED, approvalTriggered.getDatacontenttype(), approvalFinishedData,
+                        KeptnEvent.APPROVAL, KeptnEvent.FINISHED, approvalTriggered.getDatacontenttype(),
                         approvalTriggered.getShkeptncontext(), approvalTriggered.getId(),
-                        OffsetDateTime.now().format(DateTimeFormatter.ISO_ZONED_DATE_TIME));
+                        OffsetDateTime.now().format(DateTimeFormatter.ISO_ZONED_DATE_TIME), approvalFinishedData);
                 
                 approvalService.sentApprovalFinished(eventFinished);
             }

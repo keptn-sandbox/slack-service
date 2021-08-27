@@ -1,6 +1,6 @@
 package com.dynatrace.prototype;
 
-import com.dynatrace.prototype.domainModel.KeptnCloudEvent;
+import com.dynatrace.prototype.domainModel.keptnCloudEvents.KeptnCloudEvent;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
 import javax.enterprise.context.ApplicationScoped;

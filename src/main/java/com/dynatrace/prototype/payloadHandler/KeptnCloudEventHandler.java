@@ -1,6 +1,6 @@
 package com.dynatrace.prototype.payloadHandler;
 
-import com.dynatrace.prototype.domainModel.KeptnCloudEvent;
+import com.dynatrace.prototype.domainModel.keptnCloudEvents.KeptnCloudEvent;
 
 public interface KeptnCloudEventHandler {
     /**

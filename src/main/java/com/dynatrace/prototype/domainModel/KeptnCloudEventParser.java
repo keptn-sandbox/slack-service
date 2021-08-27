@@ -1,82 +1,68 @@
 package com.dynatrace.prototype.domainModel;
 
 import com.dynatrace.prototype.domainModel.eventData.*;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.dynatrace.prototype.domainModel.keptnCloudEvents.KeptnCloudEvent;
+import com.dynatrace.prototype.domainModel.keptnCloudEvents.KeptnCloudEventDefault;
+import com.dynatrace.prototype.domainModel.keptnCloudEvents.*;
+import com.dynatrace.prototype.domainModel.keptnCloudEvents.KeptnCloudEventType;
+import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import org.jboss.logging.Logger;
 
 import java.util.HashMap;
 
 public class KeptnCloudEventParser {
     private static final Logger LOG = Logger.getLogger(KeptnCloudEventParser.class);
+    private static final Gson GSON = new Gson();
 
-    public static KeptnCloudEvent parseJsonToKeptnCloudEvent(String jsonString) throws JsonProcessingException {
-        ObjectMapper objectMapper = new ObjectMapper(); //TODO: maybe use only one mapper because it is thread-save
-        KeptnCloudEvent result = objectMapper.readValue(jsonString, KeptnCloudEvent.class);
-
-        if (parseDataPayload(result)) {
-            LOG.info("Parsed event data value successfully.");
-        } else {
-            LOG.warn("Failed to pass event data value (general parsing provided).");
-        }
-
-        return result;
-    }
-
-    private static boolean parseDataPayload(KeptnCloudEvent event) {
-        boolean parsed = true;
-        ObjectMapper mapper = new ObjectMapper();
-        String fullEventType = event.getFullEventType();
-        HashMap<String, String> eventMetaData = KeptnCloudEventValidator.parseSequenceEventType(fullEventType);
+    public static KeptnCloudEvent parseJsonToKeptnCloudEvent(String jsonString) throws JsonSyntaxException {
+        KeptnCloudEventType fullEventType = GSON.fromJson(jsonString, KeptnCloudEventType.class);
+        KeptnCloudEvent result = null;
+        HashMap<String, String> eventMetaData = KeptnCloudEventValidator.parseSequenceEventType(fullEventType.getType());
 
         if (eventMetaData != null) {
-            try {
-                event.setData(mapper.convertValue(event.getData(), KeptnCloudEventData.class));
-            } catch (Exception e) {
-                LOG.error("An exception occurred while parsing the data payload!", e);
-            }
+            result = GSON.fromJson(jsonString, KeptnCloudEventDefault.class);
         } else {
-            eventMetaData = KeptnCloudEventValidator.parseTaskEventType(fullEventType);
+            eventMetaData = KeptnCloudEventValidator.parseTaskEventType(fullEventType.getType());
 
-            if (eventMetaData != null) {
+            if (eventMetaData == null) {
+                LOG.error("Cannot parse the given JSON to a KeptnCloudEvent!");
+            } else {
                 String taskName = eventMetaData.get(KeptnCloudEventValidator.TASK_NAME);
 
                 if (KeptnEvent.PROJECT.getValue().equals(taskName)) {
                     String eventType = eventMetaData.get((KeptnCloudEventValidator.EVENT_TYPE));
 
                     if (KeptnEvent.TRIGGERED.getValue().equals(eventType)){
-                        event.setData(mapper.convertValue(event.getData(), KeptnCloudEventProjectTriggeredData.class));
+                        result = GSON.fromJson(jsonString, KeptnCloudEventProjectTriggered.class);
                     } else {
-                        event.setData(mapper.convertValue(event.getData(), KeptnCloudEventProjectData.class));
+                        result = GSON.fromJson(jsonString, KeptnCloudEventProject.class);
                     }
                 } else if (KeptnEvent.SERVICE.getValue().equals(taskName)) {
-                    event.setData(mapper.convertValue(event.getData(), KeptnCloudEventData.class));
+                    result = GSON.fromJson(jsonString, KeptnCloudEventDefault.class);
                 } else if (KeptnEvent.APPROVAL.getValue().equals(taskName)) {
-                    event.setData(mapper.convertValue(event.getData(), KeptnCloudEventApprovalData.class));
+                    result = GSON.fromJson(jsonString, KeptnCloudEventApproval.class);
                 } else if (KeptnEvent.DEPLOYMENT.getValue().equals(taskName)) {
-                    event.setData(mapper.convertValue(event.getData(), KeptnCloudEventDeploymentData.class));
+                    result = GSON.fromJson(jsonString, KeptnCloudEventDeployment.class);
                 } else if (KeptnEvent.TEST.getValue().equals(taskName)) {
-                    event.setData(mapper.convertValue(event.getData(), KeptnCloudEventTestData.class));
+                    result = GSON.fromJson(jsonString, KeptnCloudEventTest.class);
                 } else if (KeptnEvent.EVALUATION.getValue().equals(taskName)) {
-                    event.setData(mapper.convertValue(event.getData(), KeptnCloudEventEvaluationData.class));
+                    result = GSON.fromJson(jsonString, KeptnCloudEventEvaluation.class);
                 } else if (KeptnEvent.RELEASE.getValue().equals(taskName)) {
-                    event.setData(mapper.convertValue(event.getData(), KeptnCloudEventReleaseData.class));
+                    result = GSON.fromJson(jsonString, KeptnCloudEventRelease.class);
                 } else if (KeptnEvent.GET_ACTION.getValue().equals(taskName) || KeptnEvent.ACTION.getValue().equals(taskName)) {
-                    event.setData(mapper.convertValue(event.getData(), KeptnCloudEventActionData.class));
+                    result = GSON.fromJson(jsonString, KeptnCloudEventAction.class);
                 } else if (KeptnEvent.GET_SLI.getValue().equals(taskName)) {
-                    event.setData(mapper.convertValue(event.getData(), KeptnCloudEventGetSLIData.class));
+                    result = GSON.fromJson(jsonString, KeptnCloudEventGetSLI.class);
                 } else if (KeptnEvent.PROBLEM.getValue().equals(taskName)) {
-                    event.setData(mapper.convertValue(event.getData(), KeptnCloudEventProblemData.class));
+                    result = GSON.fromJson(jsonString, KeptnCloudEventProblem.class);
                 } /*else if (KeptnEvent.ROLLBACK.getValue().equals(taskName)) {
-                    //event.setData(mapper.convertValue(event.getData(), KeptnCloudEventRollbackData.class)); TODO: Rollback class
-                } */else {
-                    parsed = false;
-                }
+                    //result = GSON.fromJson(jsonString, KeptnCloudEventRollback.class); TODO: Rollback class
+                } */
             }
         }
 
-        event.setMetaData(eventMetaData);
-
-        return parsed;
+        return result;
     }
+
 }

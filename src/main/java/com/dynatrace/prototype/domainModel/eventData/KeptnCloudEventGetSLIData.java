@@ -1,12 +1,12 @@
 package com.dynatrace.prototype.domainModel.eventData;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.gson.annotations.SerializedName;
 
 import java.util.LinkedHashMap;
 
 public class KeptnCloudEventGetSLIData extends KeptnCloudEventData {
     private static final String SLI_PROVIDER = "sliProvider";
-    @JsonProperty(value = "get-sli")
+    @SerializedName(value = "get-sli")
     private LinkedHashMap<String, ?> getSli;
     private LinkedHashMap<String, ?> customFilters;
     private String deployment;

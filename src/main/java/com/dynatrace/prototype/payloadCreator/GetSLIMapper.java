@@ -1,9 +1,11 @@
 package com.dynatrace.prototype.payloadCreator;
 
-import com.dynatrace.prototype.domainModel.KeptnCloudEvent;
 import com.dynatrace.prototype.domainModel.KeptnCloudEventDataResult;
 import com.dynatrace.prototype.domainModel.KeptnEvent;
 import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventGetSLIData;
+import com.dynatrace.prototype.domainModel.keptnCloudEvents.KeptnCloudEvent;
+import com.dynatrace.prototype.domainModel.keptnCloudEvents.KeptnCloudEventGetSLI;
+import com.google.gson.Gson;
 import com.slack.api.model.block.LayoutBlock;
 import com.slack.api.model.block.SectionBlock;
 import org.apache.maven.shared.utils.StringUtils;
@@ -20,19 +22,18 @@ public class GetSLIMapper extends KeptnCloudEventMapper {
     public List<LayoutBlock> getSpecificData(KeptnCloudEvent event) {
         List<LayoutBlock> layoutBlockList = new ArrayList<>();
 
-        if (eventName.equals(event.getTaskName())) {
-            layoutBlockList.addAll(getSLIData(event));
+        if (event instanceof KeptnCloudEventGetSLI) {
+            layoutBlockList.addAll(getSLIData((KeptnCloudEventGetSLI) event));
         }
 
         return layoutBlockList;
     }
 
-    private List<LayoutBlock> getSLIData(KeptnCloudEvent event) {
+    private List<LayoutBlock> getSLIData(KeptnCloudEventGetSLI event) {
         List<LayoutBlock> layoutBlockList = new ArrayList<>();
-        Object eventDataObject = event.getData();
+        KeptnCloudEventGetSLIData eventData = event.getData();
 
-        if (eventDataObject instanceof KeptnCloudEventGetSLIData) {
-            KeptnCloudEventGetSLIData eventData = (KeptnCloudEventGetSLIData) eventDataObject;
+        if (eventData != null) {
             StringBuilder message = new StringBuilder();
             KeptnCloudEventDataResult result = eventData.getResult();
             KeptnEvent eventType = KeptnEvent.valueOf(StringUtils.upperCase(event.getPlainEventType()));
@@ -51,7 +52,7 @@ public class GetSLIMapper extends KeptnCloudEventMapper {
                 layoutBlockList.add(SlackCreator.createDividerBlock());
             }
         } else {
-            LOG.warnf(WARNING_EVENT_DATA, KeptnCloudEventGetSLIData.class, eventName);
+            LOG.warn("EventData is null!");
         }
 
         return layoutBlockList;

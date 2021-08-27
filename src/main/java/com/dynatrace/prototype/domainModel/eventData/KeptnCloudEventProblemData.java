@@ -1,32 +1,30 @@
 package com.dynatrace.prototype.domainModel.eventData;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.gson.annotations.SerializedName;
 
 import java.util.LinkedHashMap;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class KeptnCloudEventProblemData extends KeptnCloudEventData {
     public static final String OPEN = "OPEN";
     public static final String RESOLVED = "RESOLVED";
 
-    @JsonProperty(value = "State")
+    @SerializedName(value = "State")
     private String state;
-    @JsonProperty(value = "ProblemID")
+    @SerializedName(value = "ProblemID")
     private String problemID;
-    @JsonProperty(value = "ProblemTitle")
+    @SerializedName(value = "ProblemTitle")
     private String problemTitle;
-    @JsonProperty(value = "ProblemDetails")
+    @SerializedName(value = "ProblemDetails")
     private LinkedHashMap<String, ?> problemDetails;
-    @JsonProperty(value = "PID")
+    @SerializedName(value = "PID")
     private String pid;
-    @JsonProperty(value = "ProblemURL")
+    @SerializedName(value = "ProblemURL")
     private String problemURL;
-    @JsonProperty(value = "ImpactedEntity")
+    @SerializedName(value = "ImpactedEntity")
     private String impactedEntity;
-    @JsonProperty(value = "ImpactedEntities")
+    @SerializedName(value = "ImpactedEntities")
     private Object[] impactedEntities;
-    @JsonProperty(value = "Tags")
+    @SerializedName(value = "Tags")
     private String tags;
 
     public String getState() {

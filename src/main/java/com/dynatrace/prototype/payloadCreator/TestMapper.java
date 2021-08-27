@@ -1,9 +1,10 @@
 package com.dynatrace.prototype.payloadCreator;
 
-import com.dynatrace.prototype.domainModel.KeptnCloudEvent;
 import com.dynatrace.prototype.domainModel.KeptnCloudEventDataResult;
 import com.dynatrace.prototype.domainModel.KeptnEvent;
 import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventTestData;
+import com.dynatrace.prototype.domainModel.keptnCloudEvents.KeptnCloudEvent;
+import com.dynatrace.prototype.domainModel.keptnCloudEvents.KeptnCloudEventTest;
 import com.slack.api.model.block.LayoutBlock;
 import com.slack.api.model.block.SectionBlock;
 import org.apache.maven.shared.utils.StringUtils;
@@ -20,19 +21,18 @@ public class TestMapper extends KeptnCloudEventMapper {
     public List<LayoutBlock> getSpecificData(KeptnCloudEvent event) {
         List<LayoutBlock> layoutBlockList = new ArrayList<>();
 
-        if (eventName.equals(event.getTaskName())) {
-            layoutBlockList.addAll(getTestData(event));
+        if (event instanceof KeptnCloudEventTest) {
+            layoutBlockList.addAll(getTestData((KeptnCloudEventTest) event));
         }
 
         return layoutBlockList;
     }
 
-    private List<LayoutBlock> getTestData(KeptnCloudEvent event) {
+    private List<LayoutBlock> getTestData(KeptnCloudEventTest event) {
         List<LayoutBlock> layoutBlockList = new ArrayList<>();
-        Object eventDataObject = event.getData();
+        KeptnCloudEventTestData eventData = event.getData();
 
-        if (eventDataObject instanceof KeptnCloudEventTestData) {
-            KeptnCloudEventTestData eventData = (KeptnCloudEventTestData) eventDataObject;
+        if (eventData != null) {
             StringBuilder message = new StringBuilder();
             KeptnCloudEventDataResult result = eventData.getResult();
             KeptnEvent eventType = KeptnEvent.valueOf(StringUtils.upperCase(event.getPlainEventType()));
@@ -51,7 +51,7 @@ public class TestMapper extends KeptnCloudEventMapper {
                 layoutBlockList.add(SlackCreator.createDividerBlock());
             }
         } else {
-            LOG.warnf(WARNING_EVENT_DATA, KeptnCloudEventTestData.class, eventName);
+            LOG.warn("EventData is null!");
         }
 
         return layoutBlockList;

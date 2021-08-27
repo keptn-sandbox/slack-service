@@ -1,10 +1,10 @@
 package com.dynatrace.prototype;
 
-import com.dynatrace.prototype.domainModel.KeptnCloudEvent;
 import com.dynatrace.prototype.domainModel.KeptnCloudEventParser;
+import com.dynatrace.prototype.domainModel.keptnCloudEvents.KeptnCloudEvent;
 import com.dynatrace.prototype.payloadHandler.KeptnCloudEventHandler;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import com.slack.api.app_backend.interactive_components.payload.BlockActionPayload;
 import com.slack.api.app_backend.util.JsonPayloadExtractor;
 import com.slack.api.util.json.GsonFactory;
@@ -37,7 +37,7 @@ public class MainResource {
             if (keptnCloudEventHandler.receiveEvent(keptnCloudEvent)) {
                 result = "Received event successfully!";
             }
-        } catch (JsonProcessingException e) {
+        } catch (JsonSyntaxException e) {
             LOG.error("An exception occurred while handling an event from Keptn!", e);
         }
 

@@ -1,7 +1,5 @@
 package com.dynatrace.prototype.domainModel;
 
-import com.fasterxml.jackson.annotation.JsonValue;
-
 public enum KeptnCloudEventDataStatus {
     SUCCEEDED("succeeded"),
     ERRORED("errored"),
@@ -13,7 +11,7 @@ public enum KeptnCloudEventDataStatus {
         this.value = value;
     }
 
-    @JsonValue
+//    @JsonValue
     public String getValue() {
         return value;
     }

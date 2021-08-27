@@ -1,7 +1,5 @@
 package com.dynatrace.prototype.domainModel;
 
-import com.fasterxml.jackson.annotation.JsonValue;
-
 import java.util.zip.DataFormatException;
 
 public enum KeptnCloudEventDataResult {
@@ -15,7 +13,7 @@ public enum KeptnCloudEventDataResult {
         this.value = value;
     }
 
-    @JsonValue
+//    @JsonValue
     public String getValue() {
         return value;
     }

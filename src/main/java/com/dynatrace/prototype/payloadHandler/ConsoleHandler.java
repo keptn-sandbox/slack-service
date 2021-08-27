@@ -1,6 +1,6 @@
 package com.dynatrace.prototype.payloadHandler;
 
-import com.dynatrace.prototype.domainModel.KeptnCloudEvent;
+import com.dynatrace.prototype.domainModel.keptnCloudEvents.KeptnCloudEvent;
 import org.jboss.logging.Logger;
 
 import javax.inject.Singleton;

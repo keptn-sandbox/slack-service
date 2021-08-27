@@ -1,11 +1,11 @@
 package com.dynatrace.prototype.payloadCreator;
 
-import com.dynatrace.prototype.domainModel.KeptnCloudEvent;
 import com.dynatrace.prototype.domainModel.KeptnCloudEventDataResult;
 import com.dynatrace.prototype.domainModel.KeptnEvent;
 import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventApprovalData;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.dynatrace.prototype.domainModel.keptnCloudEvents.KeptnCloudEvent;
+import com.dynatrace.prototype.domainModel.keptnCloudEvents.KeptnCloudEventApproval;
+import com.google.gson.Gson;
 import com.slack.api.model.block.ActionsBlock;
 import com.slack.api.model.block.LayoutBlock;
 import com.slack.api.model.block.SectionBlock;
@@ -20,6 +20,7 @@ import java.util.List;
 public class ApprovalMapper extends KeptnCloudEventMapper {
     private static final String eventName = KeptnEvent.APPROVAL.getValue();
     private static final Logger LOG = Logger.getLogger(ApprovalMapper.class);
+    private static final Gson GSON = new Gson();
 
     private static final String MANUAL = "manual";
     private static final String AUTOMATIC = "automatic";
@@ -37,19 +38,18 @@ public class ApprovalMapper extends KeptnCloudEventMapper {
     public List<LayoutBlock> getSpecificData(KeptnCloudEvent event) {
         List<LayoutBlock> layoutBlockList = new ArrayList<>();
 
-        if (eventName.equals(event.getTaskName())) {
-            layoutBlockList.addAll(getApprovalData(event));
+        if (event instanceof KeptnCloudEventApproval) {
+            layoutBlockList.addAll(getApprovalData((KeptnCloudEventApproval) event));
         }
 
         return layoutBlockList;
     }
 
-    private List<LayoutBlock> getApprovalData(KeptnCloudEvent event) {
+    private List<LayoutBlock> getApprovalData(KeptnCloudEventApproval event) {
         List<LayoutBlock> layoutBlockList = new ArrayList<>();
-        Object eventDataObject = event.getData();
+        KeptnCloudEventApprovalData eventData = event.getData();
 
-        if (eventDataObject instanceof KeptnCloudEventApprovalData) {
-            KeptnCloudEventApprovalData eventData = (KeptnCloudEventApprovalData) eventDataObject;
+        if (eventData != null) {
             StringBuilder message = new StringBuilder();
             boolean manual = false;
             String pass = eventData.getApprovalPass();
@@ -61,8 +61,8 @@ public class ApprovalMapper extends KeptnCloudEventMapper {
             String project = eventData.getProject();
 
             if (!logErrorIfNull(stage, "Stage", eventName) &&
-                !logErrorIfNull(service, "Service", eventName) &&
-                !logErrorIfNull(project, "Project", eventName)) {
+                    !logErrorIfNull(service, "Service", eventName) &&
+                    !logErrorIfNull(project, "Project", eventName)) {
 
                 if (KeptnEvent.TRIGGERED.getValue().equals(eventType)) {
                     if (KeptnCloudEventDataResult.PASS.equals(result) && MANUAL.equals(pass) ||
@@ -88,14 +88,12 @@ public class ApprovalMapper extends KeptnCloudEventMapper {
                 }
                 layoutBlockList.add(SlackCreator.createDividerBlock());
             }
-        } else {
-            LOG.warnf(WARNING_EVENT_DATA, KeptnCloudEventApprovalData.class, eventName);
         }
 
         return layoutBlockList;
     }
 
-    private LayoutBlock createApprovalButtons(KeptnCloudEvent event) {
+    private LayoutBlock createApprovalButtons(KeptnCloudEventApproval event) {
         List<BlockElement> buttons = new ArrayList<>();
         ConfirmationDialogObject confirmationApprove = SlackCreator.createConfirmationDialog(CONFIRM_TITLE,
                 String.format(CONFIRM_TEXT, APPROVAL_APPROVE_VALUE), CONFIRM_YES, CONFIRM_NO,
@@ -104,17 +102,13 @@ public class ApprovalMapper extends KeptnCloudEventMapper {
                 String.format(CONFIRM_TEXT, APPROVAL_DENY_VALUE), CONFIRM_YES, CONFIRM_NO,
                 SlackCreator.SLACK_STYLE_DANGER);
 
-        try {
-            //TODO: maybe improve how the event is sent to make the payload smaller
-            ObjectMapper mapper = new ObjectMapper();
+        System.out.println(GSON.toJson(event));
 
-            buttons.add(SlackCreator.createButton(APPROVAL_APPROVE_ID, APPROVAL_APPROVE_VALUE,
-                    mapper.writeValueAsString(event), SlackCreator.SLACK_STYLE_PRIMARY, confirmationApprove));
-            buttons.add(SlackCreator.createButton(APPROVAL_DENY_ID, APPROVAL_DENY_VALUE, null,
-                    SlackCreator.SLACK_STYLE_DANGER, confirmationDeny));
-        } catch (JsonProcessingException e) {
-            LOG.error("An exception occurred while parsing an event to JSON!", e);
-        }
+        //TODO: maybe improve how the event is sent to make the payload smaller
+        buttons.add(SlackCreator.createButton(APPROVAL_APPROVE_ID, APPROVAL_APPROVE_VALUE,
+                GSON.toJson(event), SlackCreator.SLACK_STYLE_PRIMARY, confirmationApprove));
+        buttons.add(SlackCreator.createButton(APPROVAL_DENY_ID, APPROVAL_DENY_VALUE, null,
+                SlackCreator.SLACK_STYLE_DANGER, confirmationDeny));
 
         return SlackCreator.createLayoutBlock(ActionsBlock.TYPE, buttons);
     }

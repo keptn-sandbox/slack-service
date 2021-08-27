@@ -1,10 +1,12 @@
 package com.dynatrace.prototype.payloadCreator;
 
-import com.dynatrace.prototype.domainModel.KeptnCloudEvent;
 import com.dynatrace.prototype.domainModel.KeptnCloudEventDataResult;
 import com.dynatrace.prototype.domainModel.KeptnEvent;
 import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventProjectData;
 import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventProjectFinishedData;
+import com.dynatrace.prototype.domainModel.keptnCloudEvents.KeptnCloudEvent;
+import com.dynatrace.prototype.domainModel.keptnCloudEvents.KeptnCloudEventProblem;
+import com.dynatrace.prototype.domainModel.keptnCloudEvents.KeptnCloudEventProject;
 import com.slack.api.model.block.LayoutBlock;
 import com.slack.api.model.block.SectionBlock;
 import org.jboss.logging.Logger;
@@ -20,21 +22,20 @@ public class ProjectMapper extends KeptnCloudEventMapper {
     public List<LayoutBlock> getSpecificData(KeptnCloudEvent event) {
         List<LayoutBlock> layoutBlockList = new ArrayList<>();
 
-        if (eventName.equals(event.getTaskName())) {
-            layoutBlockList.addAll(getProjectData(event));
+        if (event instanceof KeptnCloudEventProject) {
+            layoutBlockList.addAll(getProjectData((KeptnCloudEventProject) event));
         }
 
         return layoutBlockList;
     }
 
-    private List<LayoutBlock> getProjectData(KeptnCloudEvent event) {
+    private List<LayoutBlock> getProjectData(KeptnCloudEventProject event) {
         List<LayoutBlock> layoutBlockList = new ArrayList<>();
-        Object eventDataObject = event.getData();
+        KeptnCloudEventProjectData eventData = event.getData();
 
         // KeptnCloudEventProjectData is for all "create.project" events except the ".triggered".
         // For the ".triggered" use KeptnCloudEventProjectTriggeredData
-        if (eventDataObject instanceof KeptnCloudEventProjectData) {
-            KeptnCloudEventProjectData eventData = (KeptnCloudEventProjectData) eventDataObject;
+        if (eventData != null) {
             KeptnCloudEventProjectFinishedData createdProject = eventData.getCreatedProject();
             StringBuilder specificDataSB = new StringBuilder();
 
@@ -54,7 +55,7 @@ public class ProjectMapper extends KeptnCloudEventMapper {
                 layoutBlockList.add(SlackCreator.createDividerBlock());
             }
         } else {
-            LOG.warnf(WARNING_EVENT_DATA, KeptnCloudEventProjectData.class, eventName);
+            LOG.warn("EventData is null!");
         }
 
         return layoutBlockList;

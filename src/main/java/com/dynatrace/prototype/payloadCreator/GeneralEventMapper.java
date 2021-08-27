@@ -1,7 +1,9 @@
 package com.dynatrace.prototype.payloadCreator;
 
-import com.dynatrace.prototype.domainModel.KeptnCloudEvent;
 import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventData;
+import com.dynatrace.prototype.domainModel.keptnCloudEvents.KeptnCloudEvent;
+import com.dynatrace.prototype.domainModel.keptnCloudEvents.KeptnCloudEventDefault;
+import com.google.gson.Gson;
 import com.slack.api.model.block.HeaderBlock;
 import com.slack.api.model.block.LayoutBlock;
 import com.slack.api.model.block.SectionBlock;
@@ -13,6 +15,7 @@ import java.util.List;
 
 public class GeneralEventMapper extends KeptnCloudEventMapper {
     private static final Logger LOG = Logger.getLogger(GeneralEventMapper.class);
+
     private static final String ENV_KEPTN_BRIDGE_DOMAIN = "KEPTN_BRIDGE_DOMAIN";
     private static final String APP_LAYER_PROTOCOL = "http";
     private static final String KEPTN_BRIDGE_NAME = "Keptn bridge";
@@ -47,10 +50,9 @@ public class GeneralEventMapper extends KeptnCloudEventMapper {
         if (keptnBridgeDomain == null) {
             LOG.error(ENV_KEPTN_BRIDGE_DOMAIN +" is null!");
         } else {
-            Object eventDataObject = event.getData();
+            KeptnCloudEventData eventData = event.getData();
 
-            if (eventDataObject instanceof KeptnCloudEventData) {
-                KeptnCloudEventData eventData = (KeptnCloudEventData) eventDataObject;
+            if (eventData != null) {
                 StringBuilder eventURLSB = new StringBuilder();
                 eventURLSB.append(APP_LAYER_PROTOCOL).append("://").append(keptnBridgeDomain);
 

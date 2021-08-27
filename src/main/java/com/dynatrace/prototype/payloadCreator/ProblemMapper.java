@@ -1,8 +1,9 @@
 package com.dynatrace.prototype.payloadCreator;
 
-import com.dynatrace.prototype.domainModel.KeptnCloudEvent;
 import com.dynatrace.prototype.domainModel.KeptnEvent;
 import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventProblemData;
+import com.dynatrace.prototype.domainModel.keptnCloudEvents.KeptnCloudEvent;
+import com.dynatrace.prototype.domainModel.keptnCloudEvents.KeptnCloudEventProblem;
 import com.slack.api.model.block.LayoutBlock;
 import com.slack.api.model.block.SectionBlock;
 import org.jboss.logging.Logger;
@@ -18,19 +19,18 @@ public class ProblemMapper extends KeptnCloudEventMapper {
     public List<LayoutBlock> getSpecificData(KeptnCloudEvent event) {
         List<LayoutBlock> layoutBlockList = new ArrayList<>();
 
-        if (eventName.equals(event.getTaskName())) {
-            layoutBlockList.addAll(getProblemData(event));
+        if (event instanceof KeptnCloudEventProblem) {
+            layoutBlockList.addAll(getProblemData((KeptnCloudEventProblem) event));
         }
 
         return layoutBlockList;
     }
 
-    private List<LayoutBlock> getProblemData(KeptnCloudEvent event) {
+    private List<LayoutBlock> getProblemData(KeptnCloudEventProblem event) {
         List<LayoutBlock> layoutBlockList = new ArrayList<>();
-        Object eventDataObject = event.getData();
+        KeptnCloudEventProblemData eventData = event.getData();
 
-        if (eventDataObject instanceof KeptnCloudEventProblemData) {
-            KeptnCloudEventProblemData eventData = (KeptnCloudEventProblemData) eventDataObject;
+        if (eventData != null) {
             StringBuilder message = new StringBuilder();
             String state = eventData.getState();
             String service = eventData.getService();
@@ -55,7 +55,7 @@ public class ProblemMapper extends KeptnCloudEventMapper {
                 layoutBlockList.add(SlackCreator.createDividerBlock());
             }
         } else {
-            LOG.warnf(WARNING_EVENT_DATA, KeptnCloudEventProblemData.class, eventName);
+            LOG.warn("EventData is null!");
         }
 
         return layoutBlockList;

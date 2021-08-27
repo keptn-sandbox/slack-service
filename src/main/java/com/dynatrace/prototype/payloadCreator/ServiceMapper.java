@@ -1,9 +1,10 @@
 package com.dynatrace.prototype.payloadCreator;
 
-import com.dynatrace.prototype.domainModel.KeptnCloudEvent;
 import com.dynatrace.prototype.domainModel.KeptnCloudEventDataResult;
 import com.dynatrace.prototype.domainModel.KeptnEvent;
 import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventData;
+import com.dynatrace.prototype.domainModel.keptnCloudEvents.KeptnCloudEvent;
+import com.dynatrace.prototype.domainModel.keptnCloudEvents.KeptnCloudEventDefault;
 import com.slack.api.model.block.LayoutBlock;
 import com.slack.api.model.block.SectionBlock;
 import org.jboss.logging.Logger;
@@ -19,19 +20,18 @@ public class ServiceMapper extends KeptnCloudEventMapper {
     public List<LayoutBlock> getSpecificData(KeptnCloudEvent event) {
         List<LayoutBlock> layoutBlockList = new ArrayList<>();
 
-        if (eventName.equals(event.getTaskName())) {
-            layoutBlockList.addAll(getServiceData(event));
+        if (event instanceof KeptnCloudEventDefault) {
+            layoutBlockList.addAll(getServiceData((KeptnCloudEventDefault) event));
         }
 
         return layoutBlockList;
     }
 
-    private List<LayoutBlock> getServiceData(KeptnCloudEvent event) {
+    private List<LayoutBlock> getServiceData(KeptnCloudEventDefault event) {
         List<LayoutBlock> layoutBlockList = new ArrayList<>();
-        Object eventDataObject = event.getData();
+        KeptnCloudEventData eventData = event.getData();
 
-        if (eventDataObject instanceof KeptnCloudEventData) {
-            KeptnCloudEventData eventData = (KeptnCloudEventData) eventDataObject;
+        if (eventData != null) {
             StringBuilder specificDataSB = new StringBuilder();
             String serviceName = eventData.getService();
             KeptnCloudEventDataResult eventResult = eventData.getResult();
@@ -48,8 +48,7 @@ public class ServiceMapper extends KeptnCloudEventMapper {
                 layoutBlockList.add(SlackCreator.createDividerBlock());
             }
         } else {
-            LOG.warnf(WARNING_EVENT_DATA, KeptnCloudEventData.class, eventName);
-            LOG.warn("(service has no specific data class)");
+            LOG.warn("EventData is null!");
         }
 
         return layoutBlockList;

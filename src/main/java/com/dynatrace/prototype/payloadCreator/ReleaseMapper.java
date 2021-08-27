@@ -1,9 +1,10 @@
 package com.dynatrace.prototype.payloadCreator;
 
-import com.dynatrace.prototype.domainModel.KeptnCloudEvent;
 import com.dynatrace.prototype.domainModel.KeptnCloudEventDataResult;
 import com.dynatrace.prototype.domainModel.KeptnEvent;
 import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventReleaseData;
+import com.dynatrace.prototype.domainModel.keptnCloudEvents.KeptnCloudEvent;
+import com.dynatrace.prototype.domainModel.keptnCloudEvents.KeptnCloudEventRelease;
 import com.slack.api.model.block.LayoutBlock;
 import com.slack.api.model.block.SectionBlock;
 import org.apache.maven.shared.utils.StringUtils;
@@ -20,19 +21,18 @@ public class ReleaseMapper extends KeptnCloudEventMapper {
     public List<LayoutBlock> getSpecificData(KeptnCloudEvent event) {
         List<LayoutBlock> layoutBlockList = new ArrayList<>();
 
-        if (eventName.equals(event.getTaskName())) {
-            layoutBlockList.addAll(getReleaseData(event));
+        if (event instanceof KeptnCloudEventRelease) {
+            layoutBlockList.addAll(getReleaseData((KeptnCloudEventRelease) event));
         }
 
         return layoutBlockList;
     }
 
-    private List<LayoutBlock> getReleaseData(KeptnCloudEvent event) {
+    private List<LayoutBlock> getReleaseData(KeptnCloudEventRelease event) {
         List<LayoutBlock> layoutBlockList = new ArrayList<>();
-        Object eventDataObject = event.getData();
+        KeptnCloudEventReleaseData eventData = event.getData();
 
-        if (eventDataObject instanceof KeptnCloudEventReleaseData) {
-            KeptnCloudEventReleaseData eventData = (KeptnCloudEventReleaseData) eventDataObject;
+        if (eventData != null) {
             StringBuilder message = new StringBuilder();
             KeptnCloudEventDataResult result = eventData.getResult();
             KeptnEvent eventType = KeptnEvent.valueOf(StringUtils.upperCase(event.getPlainEventType()));
@@ -51,7 +51,7 @@ public class ReleaseMapper extends KeptnCloudEventMapper {
                 layoutBlockList.add(SlackCreator.createDividerBlock());
             }
         } else {
-            LOG.warnf(WARNING_EVENT_DATA, KeptnCloudEventReleaseData.class, eventName);
+            LOG.warn("EventData is null!");
         }
 
         return layoutBlockList;

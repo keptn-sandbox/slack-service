@@ -1,9 +1,11 @@
 package com.dynatrace.prototype.payloadCreator;
 
-import com.dynatrace.prototype.domainModel.KeptnCloudEvent;
 import com.dynatrace.prototype.domainModel.KeptnCloudEventDataResult;
 import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventData;
 import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventProblemData;
+import com.dynatrace.prototype.domainModel.keptnCloudEvents.KeptnCloudEvent;
+import com.dynatrace.prototype.domainModel.keptnCloudEvents.KeptnCloudEventDefault;
+import com.dynatrace.prototype.domainModel.keptnCloudEvents.KeptnCloudEventProblem;
 import com.slack.api.methods.request.chat.ChatPostMessageRequest;
 import com.slack.api.model.Attachment;
 import com.slack.api.model.block.*;
@@ -180,14 +182,13 @@ public class SlackCreator {
         ChatPostMessageRequest request = null;
 
         if (event != null && slackChannel != null) {
-            Object eventDataObject = event.getData();
             String eventResult = null;
 
-            if (eventDataObject instanceof KeptnCloudEventProblemData) {
-                KeptnCloudEventProblemData eventData = (KeptnCloudEventProblemData) eventDataObject;
+            if (event instanceof KeptnCloudEventProblem) {
+                KeptnCloudEventProblemData eventData = ((KeptnCloudEventProblem) event).getData();
                 eventResult = eventData.getState();
-            } else if (eventDataObject instanceof  KeptnCloudEventData) {
-                KeptnCloudEventData eventData = (KeptnCloudEventData) eventDataObject;
+            } else {
+                KeptnCloudEventData eventData = event.getData();
                 eventResult = Objects.toString(eventData.getResult());
             }
 

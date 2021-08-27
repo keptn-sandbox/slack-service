@@ -3,7 +3,7 @@ package com.dynatrace.prototype.domainModel.keptnCloudEvents;
 import com.dynatrace.prototype.domainModel.KeptnEvent;
 import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventData;
 
-public class KeptnCloudEventDefault extends KeptnCloudEvent {
+public class KeptnCloudEventDefault extends KeptnCloudEvent<KeptnCloudEventData> {
     private KeptnCloudEventData data;
 
     public KeptnCloudEventDefault() { }
@@ -18,5 +18,5 @@ public class KeptnCloudEventDefault extends KeptnCloudEvent {
     public KeptnCloudEventData getData() {
         return data;
     }
-    
+
 }

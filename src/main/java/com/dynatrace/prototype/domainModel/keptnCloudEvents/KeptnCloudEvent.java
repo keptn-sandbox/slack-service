@@ -2,28 +2,23 @@ package com.dynatrace.prototype.domainModel.keptnCloudEvents;
 
 import com.dynatrace.prototype.domainModel.KeptnCloudEventValidator;
 import com.dynatrace.prototype.domainModel.KeptnEvent;
-import com.fasterxml.jackson.annotation.JsonAlias;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventData;
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 
 import java.util.HashMap;
 
-public abstract class KeptnCloudEvent {
+public abstract class KeptnCloudEvent<T extends KeptnCloudEventData> {
     private String specversion;
-    @JsonInclude(JsonInclude.Include.NON_NULL)
     private String id;
     private String source;
-    @JsonProperty(value = "type")
+    @SerializedName(value = "type")
     private String fullEventType;
-    @JsonIgnore
-    private HashMap<String, String> metaData; //includes 'stageName', 'sequenceName' and 'eventType' or 'taskName' and 'eventType'
-    @JsonAlias("contenttype")
+    private transient HashMap<String, String> metaData; //includes 'stageName', 'sequenceName' and 'eventType' or 'taskName' and 'eventType'
+    @SerializedName(value = "datacontenttype", alternate = {"contenttype"})
     private String datacontenttype;
     private String shkeptncontext;
-    @JsonInclude(JsonInclude.Include.NON_NULL)
     private String shkeptnspecversion;
-    @JsonInclude(JsonInclude.Include.NON_NULL)
     private String triggeredid; //not available if type equals triggered
     private String time;
 
@@ -53,27 +48,27 @@ public abstract class KeptnCloudEvent {
         return source;
     }
 
-    @JsonProperty(value = "type")
+//    @JsonProperty(value = "type")
     public String getFullEventType() {
         return fullEventType;
     }
 
-    @JsonIgnore
+//    @JsonIgnore
     public String getTaskName() {
         return getSpecificMetaData(KeptnCloudEventValidator.TASK_NAME);
     }
 
-    @JsonIgnore
+//    @JsonIgnore
     public String getPlainEventType() {
         return getSpecificMetaData(KeptnCloudEventValidator.EVENT_TYPE);
     }
 
-    @JsonIgnore
+//    @JsonIgnore
     public String getStageName() {
         return getSpecificMetaData(KeptnCloudEventValidator.STAGE_NAME);
     }
 
-    @JsonIgnore
+//    @JsonIgnore
     public String getSequenceName() {
         return getSpecificMetaData(KeptnCloudEventValidator.SEQUENCE_NAME);
     }
@@ -85,7 +80,7 @@ public abstract class KeptnCloudEvent {
      * @param field of metaData
      * @return the value of field or else null
      */
-    @JsonIgnore
+//    @JsonIgnore
     private String getSpecificMetaData(String field) {
         String eventType = null;
 
@@ -120,4 +115,5 @@ public abstract class KeptnCloudEvent {
         return time;
     }
 
+    public abstract T getData();
 }

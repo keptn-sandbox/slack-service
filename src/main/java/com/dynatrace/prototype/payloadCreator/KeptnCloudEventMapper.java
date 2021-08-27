@@ -1,8 +1,8 @@
 package com.dynatrace.prototype.payloadCreator;
 
-import com.dynatrace.prototype.domainModel.KeptnCloudEvent;
 import com.dynatrace.prototype.domainModel.KeptnCloudEventDataResult;
 import com.dynatrace.prototype.domainModel.KeptnEvent;
+import com.dynatrace.prototype.domainModel.keptnCloudEvents.KeptnCloudEvent;
 import com.slack.api.model.block.LayoutBlock;
 import org.apache.maven.shared.utils.StringUtils;
 import org.jboss.logging.Logger;

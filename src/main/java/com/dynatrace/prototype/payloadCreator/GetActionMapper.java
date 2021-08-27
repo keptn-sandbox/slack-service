@@ -1,9 +1,11 @@
 package com.dynatrace.prototype.payloadCreator;
 
-import com.dynatrace.prototype.domainModel.KeptnCloudEvent;
 import com.dynatrace.prototype.domainModel.KeptnCloudEventDataResult;
 import com.dynatrace.prototype.domainModel.KeptnEvent;
 import com.dynatrace.prototype.domainModel.eventData.KeptnCloudEventActionData;
+import com.dynatrace.prototype.domainModel.keptnCloudEvents.KeptnCloudEvent;
+import com.dynatrace.prototype.domainModel.keptnCloudEvents.KeptnCloudEventAction;
+import com.google.gson.Gson;
 import com.slack.api.model.block.LayoutBlock;
 import com.slack.api.model.block.SectionBlock;
 import org.apache.maven.shared.utils.StringUtils;
@@ -20,22 +22,21 @@ public class GetActionMapper extends KeptnCloudEventMapper {
     public List<LayoutBlock> getSpecificData(KeptnCloudEvent event) {
         List<LayoutBlock> layoutBlockList = new ArrayList<>();
 
-        if (KeptnEvent.ACTION.getValue().equals(event.getTaskName())) {
-            layoutBlockList.addAll(getActionData(event));
-        } else if (KeptnEvent.GET_ACTION.getValue().equals(event.getTaskName())) {
-            eventName = KeptnEvent.GET_ACTION.getValue();
-            layoutBlockList.addAll(getActionData(event));
+        if (event instanceof KeptnCloudEventAction) {
+            if (KeptnEvent.GET_ACTION.getValue().equals(event.getTaskName())) {
+                eventName = KeptnEvent.GET_ACTION.getValue();
+                layoutBlockList.addAll(getActionData((KeptnCloudEventAction) event));
+            }
         }
 
         return layoutBlockList;
     }
 
-    private List<LayoutBlock> getActionData(KeptnCloudEvent event) {
+    private List<LayoutBlock> getActionData(KeptnCloudEventAction event) {
         List<LayoutBlock> layoutBlockList = new ArrayList<>();
-        Object eventDataObject = event.getData();
+        KeptnCloudEventActionData eventData = event.getData();
 
-        if (eventDataObject instanceof KeptnCloudEventActionData) {
-            KeptnCloudEventActionData eventData = (KeptnCloudEventActionData) eventDataObject;
+        if (eventData != null) {
             StringBuilder message = new StringBuilder();
             KeptnCloudEventDataResult result = eventData.getResult();
             KeptnEvent eventType = KeptnEvent.valueOf(StringUtils.upperCase(event.getPlainEventType()));
@@ -54,7 +55,7 @@ public class GetActionMapper extends KeptnCloudEventMapper {
                 layoutBlockList.add(SlackCreator.createDividerBlock());
             }
         } else {
-            LOG.warnf(WARNING_EVENT_DATA, KeptnCloudEventActionData.class, eventName);
+            LOG.warn("EventData is null!");
         }
 
         return layoutBlockList;
